@@ -3,7 +3,8 @@
 
 #include "stm32f1xx_hal.h"
 
-typedef struct {
+typedef struct
+{
   GPIO_TypeDef *GPIOx;
   uint32_t Pin;
   GPIO_PinState ActiveState;
