@@ -3,15 +3,10 @@
 
 #include "stm32f1xx_hal.h"
 
-typedef enum {
-  LEDMode_Low,
-  LEDMode_High,
-} LED_Mode;
-
 typedef struct {
   GPIO_TypeDef *GPIOx;
   uint32_t Pin;
-  LED_Mode Mode;
+  GPIO_PinState ActiveState;
 } LED_t;
 
 void LED_On(LED_t *Self);
