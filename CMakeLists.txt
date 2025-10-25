@@ -48,6 +48,7 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
+    ${CMAKE_SOURCE_DIR}/Util/Src/Serial.c
     ${CMAKE_SOURCE_DIR}/Hardware/Src/LED.c
     ${CMAKE_SOURCE_DIR}/Hardware/Src/Key.c
 )
@@ -55,6 +56,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined include paths
+    ${CMAKE_SOURCE_DIR}/Util/Inc/
     ${CMAKE_SOURCE_DIR}/Hardware/Inc/
 )
 
