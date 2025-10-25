@@ -5,7 +5,7 @@
 
 typedef struct
 {
-  UART_HandleTypeDef *hUART;
+  UART_HandleTypeDef *hUARTx;
 
   uint8_t TxBuffer[128];
 } Serial_t;

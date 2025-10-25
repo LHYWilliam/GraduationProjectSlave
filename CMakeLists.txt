@@ -49,6 +49,7 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
     ${CMAKE_SOURCE_DIR}/Util/Src/Serial.c
+    ${CMAKE_SOURCE_DIR}/Util/Src/Sampler.c
     ${CMAKE_SOURCE_DIR}/Hardware/Src/LED.c
     ${CMAKE_SOURCE_DIR}/Hardware/Src/Key.c
 )
@@ -70,4 +71,8 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     stm32cubemx
 
     # Add user defined libraries
+)
+
+target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
+    -u _printf_float
 )

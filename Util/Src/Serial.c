@@ -12,6 +12,6 @@ void Serial_Printf(Serial_t *Self, const char *Format, ...)
 
   if (Length > 0)
   {
-    HAL_UART_Transmit(Self->hUART, Self->TxBuffer, Length, HAL_MAX_DELAY);
+    HAL_UART_Transmit(Self->hUARTx, Self->TxBuffer, Length, HAL_MAX_DELAY);
   }
 }

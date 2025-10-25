@@ -1,20 +1,20 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * File Name          : freertos.c
-  * Description        : Code for freertos applications
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * File Name          : freertos.c
+ * Description        : Code for freertos applications
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2025 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
@@ -54,6 +54,11 @@ const osThreadAttr_t defaultTask_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
+/* Definitions for LEDTimer */
+osTimerId_t LEDTimerHandle;
+const osTimerAttr_t LEDTimer_attributes = {
+  .name = "LEDTimer"
+};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -61,6 +66,7 @@ const osThreadAttr_t defaultTask_attributes = {
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
+void LEDTimerCode(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -82,8 +88,15 @@ void MX_FREERTOS_Init(void) {
   /* add semaphores, ... */
   /* USER CODE END RTOS_SEMAPHORES */
 
+  /* Create the timer(s) */
+  /* creation of LEDTimer */
+  LEDTimerHandle = osTimerNew(LEDTimerCode, osTimerPeriodic, NULL, &LEDTimer_attributes);
+
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
+
+  osTimerStart(LEDTimerHandle, 100);
+
   /* USER CODE END RTOS_TIMERS */
 
   /* USER CODE BEGIN RTOS_QUEUES */
@@ -106,20 +119,42 @@ void MX_FREERTOS_Init(void) {
 
 /* USER CODE BEGIN Header_StartDefaultTask */
 /**
-  * @brief  Function implementing the defaultTask thread.
-  * @param  argument: Not used
-  * @retval None
-  */
+ * @brief  Function implementing the defaultTask thread.
+ * @param  argument: Not used
+ * @retval None
+ */
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
+
+  UNUSED(argument);
+
   /* Infinite loop */
-  for(;;)
+  for (;;)
   {
+    if (Key_WasPressed(&Key))
+    {
+      LED_Toggle(&LED);
+    }
+
     osDelay(1);
   }
   /* USER CODE END StartDefaultTask */
+}
+
+/* LEDTimerCode function */
+void LEDTimerCode(void *argument)
+{
+  /* USER CODE BEGIN LEDTimerCode */
+
+  UNUSED(argument);
+
+  LED_Toggle(&LED);
+  float Voltage1 = Sampler.Buffer[0] * 3.3 / 4095., Voltage2 = Sampler.Buffer[1] * 3.3 / 4095.;
+  Serial_Printf(&Serial, "%3d [%.3f %.3f]\r\n", osKernelGetTickCount() / 1000, Voltage1, Voltage2);
+
+  /* USER CODE END LEDTimerCode */
 }
 
 /* Private application code --------------------------------------------------*/
