@@ -50,15 +50,14 @@
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+    .name = "defaultTask",
+    .stack_size = 128 * 4,
+    .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for LEDTimer */
 osTimerId_t LEDTimerHandle;
 const osTimerAttr_t LEDTimer_attributes = {
-  .name = "LEDTimer"
-};
+    .name = "LEDTimer"};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -75,7 +74,8 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   * @param  None
   * @retval None
   */
-void MX_FREERTOS_Init(void) {
+void MX_FREERTOS_Init(void)
+{
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
@@ -114,7 +114,6 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
-
 }
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -130,13 +129,24 @@ void StartDefaultTask(void *argument)
 
   UNUSED(argument);
 
+  OLED_Init(&OLED);
+
   /* Infinite loop */
   for (;;)
   {
-    if (Key_WasPressed(&Key))
-    {
-      LED_Toggle(&LED);
-    }
+    static int X = 0, Y = 0;
+    static uint32_t Tick;
+
+    OLED_ClearBuffer(&OLED);
+    OLED_Printf(&OLED, X, Y, "%d", Tick);
+    X++;
+    Y++;
+    X %= OLED.Width;
+    Y %= OLED.Height;
+
+    Tick = osKernelGetTickCount();
+    OLED_SendBuffer(&OLED);
+    Tick = osKernelGetTickCount() - Tick;
 
     osDelay(1);
   }
@@ -151,8 +161,8 @@ void LEDTimerCode(void *argument)
   UNUSED(argument);
 
   LED_Toggle(&LED);
-  float Voltage1 = Sampler.Buffer[0] * 3.3 / 4095., Voltage2 = Sampler.Buffer[1] * 3.3 / 4095.;
-  Serial_Printf(&Serial, "%3d [%.3f %.3f]\r\n", osKernelGetTickCount() / 1000, Voltage1, Voltage2);
+  // float Voltage1 = Sampler.Buffer[0] * 3.3 / 4095., Voltage2 = Sampler.Buffer[1] * 3.3 / 4095.;
+  // Serial_Printf(&Serial, "%3d [%.3f %.3f]\r\n", osKernelGetTickCount() / 1000, Voltage1, Voltage2);
 
   /* USER CODE END LEDTimerCode */
 }
@@ -161,4 +171,3 @@ void LEDTimerCode(void *argument)
 /* USER CODE BEGIN Application */
 
 /* USER CODE END Application */
-

@@ -34,6 +34,7 @@ extern "C" {
 
 #include "Key.h"
 #include "LED.h"
+#include "OLED.h"
 #include "Serial.h"
 #include "Sampler.h"
 
@@ -44,6 +45,7 @@ extern "C" {
 
 extern LED_t LED;
 extern Key_t Key;
+extern OLED_t OLED;
 extern Serial_t Serial;
 extern Sampler_t Sampler;
 

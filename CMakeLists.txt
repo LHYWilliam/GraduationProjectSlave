@@ -52,6 +52,9 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/Util/Src/Sampler.c
     ${CMAKE_SOURCE_DIR}/Hardware/Src/LED.c
     ${CMAKE_SOURCE_DIR}/Hardware/Src/Key.c
+    ${CMAKE_SOURCE_DIR}/Hardware/Src/OLED.c
+    ${CMAKE_SOURCE_DIR}/Hardware/Src/OLED_I2C.c
+    ${CMAKE_SOURCE_DIR}/Hardware/Src/OLED_Font.c
 )
 
 # Add include paths
