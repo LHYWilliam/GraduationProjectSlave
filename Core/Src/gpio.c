@@ -51,20 +51,26 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(BoardLED_GPIO_Port, BoardLED_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : Key_Pin */
-  GPIO_InitStruct.Pin = Key_Pin;
+  /*Configure GPIO pin : BoardKey_Pin */
+  GPIO_InitStruct.Pin = BoardKey_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  HAL_GPIO_Init(Key_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(BoardKey_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : LED_Pin */
-  GPIO_InitStruct.Pin = LED_Pin;
+  /*Configure GPIO pin : BoardLED_Pin */
+  GPIO_InitStruct.Pin = BoardLED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(LED_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(BoardLED_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : EncoderKey_Pin */
+  GPIO_InitStruct.Pin = EncoderKey_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(EncoderKey_GPIO_Port, &GPIO_InitStruct);
 
 }
 

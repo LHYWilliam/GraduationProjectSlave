@@ -51,7 +51,7 @@
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
-  .stack_size = 128 * 4,
+  .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for LEDTimer */
@@ -62,6 +62,10 @@ const osTimerAttr_t LEDTimer_attributes = {
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
+
+void OLED_Test(void);
+void Sampler_Test(void);
+void Encoder_Test(void);
 
 /* USER CODE END FunctionPrototypes */
 
@@ -135,57 +139,9 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for (;;)
   {
-    static int X = 0, Y = 0;
+    OLED_Test();
 
-    X = 0, Y = 0;
-
-    while (X < OLED.Width - 1)
-    {
-      OLED_ClearBuffer(&OLED);
-
-      OLED_DrawLine(&OLED, 64, 32, X, Y);
-
-      OLED_SendBuffer(&OLED);
-      X++;
-
-      osDelay(1);
-    }
-
-    while (Y < OLED.Height - 1)
-    {
-      OLED_ClearBuffer(&OLED);
-
-      OLED_DrawLine(&OLED, 64, 32, X, Y);
-
-      OLED_SendBuffer(&OLED);
-      Y++;
-
-      osDelay(1);
-    }
-
-    while (X > 0)
-    {
-      OLED_ClearBuffer(&OLED);
-
-      OLED_DrawLine(&OLED, 64, 32, X, Y);
-
-      OLED_SendBuffer(&OLED);
-      X--;
-
-      osDelay(1);
-    }
-
-    while (Y > 0)
-    {
-      OLED_ClearBuffer(&OLED);
-
-      OLED_DrawLine(&OLED, 64, 32, X, Y);
-
-      OLED_SendBuffer(&OLED);
-      Y--;
-
-      osDelay(1);
-    }
+    osDelay(1);
   }
   /* USER CODE END StartDefaultTask */
 }
@@ -197,15 +153,88 @@ void LEDTimerCode(void *argument)
 
   UNUSED(argument);
 
-  LED_Toggle(&LED);
+  LED_Toggle(&BoardLED);
+
   // float Voltage1 = Sampler.Buffer[0] * 3.3 / 4095., Voltage2 = Sampler.Buffer[1] * 3.3 / 4095.;
-  // Serial_Printf(&Serial, "%3d [%.3f %.3f]\r\n", osKernelGetTickCount() / 1000, Voltage1, Voltage2);
+  // Serial_Printf(&Serial, "[%.3f %.3f]\r\n", Voltage1, Voltage2);
 
   /* USER CODE END LEDTimerCode */
 }
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
+
+void OLED_Test(void)
+{
+  static int X = 0, Y = 0;
+
+  X = 0, Y = 0;
+
+  while (X < OLED.Width - 1)
+  {
+    OLED_ClearBuffer(&OLED);
+    OLED_DrawLine(&OLED, 64, 32, X, Y);
+    OLED_SendBuffer(&OLED);
+    X++;
+
+    osDelay(1);
+  }
+
+  while (Y < OLED.Height - 1)
+  {
+    OLED_ClearBuffer(&OLED);
+    OLED_DrawLine(&OLED, 64, 32, X, Y);
+    OLED_SendBuffer(&OLED);
+    Y++;
+
+    osDelay(1);
+  }
+
+  while (X > 0)
+  {
+    OLED_ClearBuffer(&OLED);
+    OLED_DrawLine(&OLED, 64, 32, X, Y);
+    OLED_SendBuffer(&OLED);
+    X--;
+
+    osDelay(1);
+  }
+
+  while (Y > 0)
+  {
+    OLED_ClearBuffer(&OLED);
+    OLED_DrawLine(&OLED, 64, 32, X, Y);
+    OLED_SendBuffer(&OLED);
+    Y--;
+
+    osDelay(1);
+  }
+}
+
+void Sampler_Test(void)
+{
+  float Voltage1 = Sampler.Buffer[0] * 3.3 / 4095., Voltage2 = Sampler.Buffer[1] * 3.3 / 4095.;
+  Serial_Printf(&Serial, "[%.3f %.3f]\r\n", Voltage1, Voltage2);
+
+  osDelay(100);
+}
+
+void Encoder_Test(void)
+{
+  if (Key_IsPressing(&EncoderKey))
+  {
+    LED_On(&BoardLED);
+  } else
+  {
+    LED_Off(&BoardLED);
+  }
+
+  int16_t Speed = Encoder_GetSpeed(&Encoder);
+  uint16_t Count = Encoder_GetCount(&Encoder);
+  Serial_Printf(&Serial, "[Count, Speed]: [%d, %d]\r\n", Count, Speed);
+
+  osDelay(100);
+}
 
 /* USER CODE END Application */
 

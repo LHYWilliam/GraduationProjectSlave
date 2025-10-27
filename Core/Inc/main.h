@@ -37,17 +37,21 @@ extern "C" {
 #include "OLED.h"
 #include "Serial.h"
 #include "Sampler.h"
+#include "Encoder.h"
 
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
 
-extern LED_t LED;
-extern Key_t Key;
+extern LED_t BoardLED;
+extern Key_t BoardKey;
+extern Key_t EncoderKey;
+
 extern OLED_t OLED;
 extern Serial_t Serial;
 extern Sampler_t Sampler;
+extern Encoder_t Encoder;
 
 /* USER CODE END ET */
 
@@ -69,10 +73,12 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define Key_Pin GPIO_PIN_0
-#define Key_GPIO_Port GPIOA
-#define LED_Pin GPIO_PIN_2
-#define LED_GPIO_Port GPIOB
+#define BoardKey_Pin GPIO_PIN_0
+#define BoardKey_GPIO_Port GPIOA
+#define BoardLED_Pin GPIO_PIN_2
+#define BoardLED_GPIO_Port GPIOB
+#define EncoderKey_Pin GPIO_PIN_15
+#define EncoderKey_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

@@ -50,16 +50,22 @@
 
 /* USER CODE BEGIN PV */
 
-LED_t LED = {
-    .GPIOx = LED_GPIO_Port,
-    .Pin = LED_Pin,
+LED_t BoardLED = {
+    .GPIOx = BoardLED_GPIO_Port,
+    .Pin = BoardLED_Pin,
     .ActiveState = GPIO_PIN_SET,
 };
 
-Key_t Key = {
-    .GPIOx = Key_GPIO_Port,
-    .Pin = Key_Pin,
+Key_t BoardKey = {
+    .GPIOx = BoardKey_GPIO_Port,
+    .Pin = BoardKey_Pin,
     .ActiveState = GPIO_PIN_SET,
+};
+
+Key_t EncoderKey = {
+    .GPIOx = EncoderKey_GPIO_Port,
+    .Pin = EncoderKey_Pin,
+    .ActiveState = GPIO_PIN_RESET,
 };
 
 OLED_t OLED = {
@@ -67,7 +73,7 @@ OLED_t OLED = {
 };
 
 Serial_t Serial = {
-    .hUARTx = &huart1,
+    .hUARTx = &huart3,
 };
 
 uint16_t Buffer[2];
@@ -76,6 +82,10 @@ Sampler_t Sampler = {
     .hTIMx = &htim3,
     .Length = 2,
     .Buffer = Buffer,
+};
+
+Encoder_t Encoder = {
+    .hTIMx = &htim1,
 };
 
 /* USER CODE END PV */
@@ -122,12 +132,14 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_USART1_UART_Init();
   MX_ADC1_Init();
   MX_TIM3_Init();
   MX_I2C1_Init();
+  MX_TIM1_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  Encoder_Start(&Encoder);
   Sampler_Start_DMA_TIM(&Sampler);
 
   /* USER CODE END 2 */
