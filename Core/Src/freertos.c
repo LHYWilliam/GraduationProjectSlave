@@ -50,14 +50,15 @@
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
-    .name = "defaultTask",
-    .stack_size = 128 * 4,
-    .priority = (osPriority_t) osPriorityNormal,
+  .name = "defaultTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for LEDTimer */
 osTimerId_t LEDTimerHandle;
 const osTimerAttr_t LEDTimer_attributes = {
-    .name = "LEDTimer"};
+  .name = "LEDTimer"
+};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -74,8 +75,7 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   * @param  None
   * @retval None
   */
-void MX_FREERTOS_Init(void)
-{
+void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
@@ -114,6 +114,7 @@ void MX_FREERTOS_Init(void)
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
+
 }
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -135,20 +136,56 @@ void StartDefaultTask(void *argument)
   for (;;)
   {
     static int X = 0, Y = 0;
-    static uint32_t Tick;
 
-    OLED_ClearBuffer(&OLED);
-    OLED_Printf(&OLED, X, Y, "%d", Tick);
-    X++;
-    Y++;
-    X %= OLED.Width;
-    Y %= OLED.Height;
+    X = 0, Y = 0;
 
-    Tick = osKernelGetTickCount();
-    OLED_SendBuffer(&OLED);
-    Tick = osKernelGetTickCount() - Tick;
+    while (X < OLED.Width - 1)
+    {
+      OLED_ClearBuffer(&OLED);
 
-    osDelay(1);
+      OLED_DrawLine(&OLED, 64, 32, X, Y);
+
+      OLED_SendBuffer(&OLED);
+      X++;
+
+      osDelay(1);
+    }
+
+    while (Y < OLED.Height - 1)
+    {
+      OLED_ClearBuffer(&OLED);
+
+      OLED_DrawLine(&OLED, 64, 32, X, Y);
+
+      OLED_SendBuffer(&OLED);
+      Y++;
+
+      osDelay(1);
+    }
+
+    while (X > 0)
+    {
+      OLED_ClearBuffer(&OLED);
+
+      OLED_DrawLine(&OLED, 64, 32, X, Y);
+
+      OLED_SendBuffer(&OLED);
+      X--;
+
+      osDelay(1);
+    }
+
+    while (Y > 0)
+    {
+      OLED_ClearBuffer(&OLED);
+
+      OLED_DrawLine(&OLED, 64, 32, X, Y);
+
+      OLED_SendBuffer(&OLED);
+      Y--;
+
+      osDelay(1);
+    }
   }
   /* USER CODE END StartDefaultTask */
 }
@@ -171,3 +208,4 @@ void LEDTimerCode(void *argument)
 /* USER CODE BEGIN Application */
 
 /* USER CODE END Application */
+
