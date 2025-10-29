@@ -246,49 +246,81 @@ void OLED_DrawSolidRectangle(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, 
   OLED_FillArea(Self, X, Y, Width, Height);
 }
 
+// void OLED_ShowImage(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height, const uint8_t *Image)
+// {
+//   if (X >= Self->Width || Y >= Self->Height || X + Width < 0 || Y + Height < 0)
+//   {
+//     return;
+//   }
+
+//   uint8_t Pages = (Height + 7) / 8;
+
+//   int16_t StartPage = Y / 8;
+//   int16_t Offset = Y % 8;
+
+//   for (int16_t Page = 0; Page < Pages; Page++)
+//   {
+//     int16_t TargetPage = StartPage + Page;
+//     if (TargetPage < 0)
+//     {
+//       continue;
+//     } else if (TargetPage >= 8)
+//     {
+//       break;
+//     }
+
+//     for (int16_t i = 0; i < Width; i++)
+//     {
+//       int16_t TargetX = X + i;
+//       if (TargetX < 0)
+//       {
+//         continue;
+//       } else if (TargetX >= Self->Width)
+//       {
+//         break;
+//       }
+
+//       uint8_t ImageData = Image[Page * Width + i];
+
+//       if (Offset == 0)
+//       {
+//         Self->DisplayBuffer[TargetPage][TargetX] |= ImageData;
+//       } else
+//       {
+//         Self->DisplayBuffer[TargetPage][TargetX] |= ImageData << Offset;
+//         Self->DisplayBuffer[TargetPage + 1][TargetX] |= ImageData >> (8 - Offset);
+//       }
+//     }
+//   }
+// }
+
 void OLED_ShowImage(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height, const uint8_t *Image)
 {
-  if (X >= Self->Width || Y >= Self->Height || X + Width < 0 || Y + Height < 0)
+  // OLED_ClearArea(Self, X, Y, Width, Height);
+
+  for (uint8_t j = 0; j < (Height - 1) / 8 + 1; j++)
   {
-    return;
-  }
-
-  uint8_t Pages = (Height + 7) / 8;
-
-  int16_t StartPage = Y / 8;
-  int16_t Offset = Y % 8;
-
-  for (int16_t Page = 0; Page < Pages; Page++)
-  {
-    int16_t TargetPage = StartPage + Page;
-    if (TargetPage < 0)
+    for (uint8_t i = 0; i < Width; i++)
     {
-      continue;
-    } else if (TargetPage >= 8)
-    {
-      break;
-    }
+      if (X + i >= 0 && X + i < Self->Width)
+      {
+        int16_t Page = Y / 8;
+        int16_t Shift = Y % 8;
+        if (Y < 0)
+        {
+          Page -= 1;
+          Shift += 8;
+        }
 
-    for (int16_t i = 0; i < Width; i++)
-    {
-      int16_t TargetX = X + i;
-      if (TargetX < 0)
-      {
-        continue;
-      } else if (TargetX >= Self->Width)
-      {
-        break;
-      }
+        if (Page + j >= 0 && Page + j <= 7)
+        {
+          Self->DisplayBuffer[Page + j][X + i] |= Image[j * Width + i] << (Shift);
+        }
 
-      uint8_t ImageData = Image[Page * Width + i];
-
-      if (Offset == 0)
-      {
-        Self->DisplayBuffer[TargetPage][TargetX] |= ImageData;
-      } else
-      {
-        Self->DisplayBuffer[TargetPage][TargetX] |= ImageData << Offset;
-        Self->DisplayBuffer[TargetPage + 1][TargetX] |= ImageData >> (8 - Offset);
+        if (Page + j + 1 >= 0 && Page + j + 1 <= 7)
+        {
+          Self->DisplayBuffer[Page + j + 1][X + i] |= Image[j * Width + i] >> (8 - Shift);
+        }
       }
     }
   }
@@ -325,13 +357,11 @@ void OLED_ShowChar(OLED_t *Self, int16_t X, int16_t Y, char Char)
   switch (Self->Font)
   {
   case OLEDFont_6X8:
-    OLED_ShowImage(Self, X, Y, Self->FontWidth, Self->FontHeight,
-                   OLED_Font6x8[Char - ' ']);
+    OLED_ShowImage(Self, X, Y, Self->FontWidth, Self->FontHeight, OLED_Font6x8[Char - ' ']);
     break;
 
   case OLEDFont_8X16:
-    OLED_ShowImage(Self, X, Y, Self->FontWidth, Self->FontHeight,
-                   OLED_Font8x16[Char - ' ']);
+    OLED_ShowImage(Self, X, Y, Self->FontWidth, Self->FontHeight, OLED_Font8x16[Char - ' ']);
     break;
 
   default:
@@ -343,7 +373,7 @@ void OLED_ShowString(OLED_t *Self, int16_t X, int16_t Y, const char *String)
 {
   for (uint8_t i = 0; String[i]; i++)
   {
-    if (X < 0)
+    if (X + Self->FontWidth < 0)
     {
       X += Self->FontWidth;
       continue;
@@ -362,7 +392,7 @@ void OLED_Printf(OLED_t *Self, int16_t X, int16_t Y, const char *Format, ...)
 {
   va_list Args;
   va_start(Args, Format);
-  vsnprintf((char *) Self->PrintfBuffer, sizeof(Self->PrintfBuffer), Format, Args);
+  vsprintf((char *) Self->PrintfBuffer, Format, Args);
   va_end(Args);
 
   OLED_ShowString(Self, X, Y, (char *) Self->PrintfBuffer);

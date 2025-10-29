@@ -35,9 +35,12 @@ extern "C" {
 #include "Key.h"
 #include "LED.h"
 #include "OLED.h"
+#include "Menu.h"
 #include "Serial.h"
 #include "Sampler.h"
 #include "Encoder.h"
+
+#include "Application.h"
 
 /* USER CODE END Includes */
 
@@ -52,6 +55,9 @@ extern OLED_t OLED;
 extern Serial_t Serial;
 extern Sampler_t Sampler;
 extern Encoder_t Encoder;
+
+extern TextPage_t *TextPage;
+extern SelectioneBar_t SelectioneBar;
 
 /* USER CODE END ET */
 

@@ -47,12 +47,19 @@
 /* USER CODE BEGIN Variables */
 
 /* USER CODE END Variables */
-/* Definitions for defaultTask */
-osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
-  .stack_size = 256 * 4,
+/* Definitions for OLEDFlushTask */
+osThreadId_t OLEDFlushTaskHandle;
+const osThreadAttr_t OLEDFlushTask_attributes = {
+  .name = "OLEDFlushTask",
+  .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
+};
+/* Definitions for OLEDInteraction */
+osThreadId_t OLEDInteractionHandle;
+const osThreadAttr_t OLEDInteraction_attributes = {
+  .name = "OLEDInteraction",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityHigh,
 };
 /* Definitions for LEDTimer */
 osTimerId_t LEDTimerHandle;
@@ -69,7 +76,8 @@ void Encoder_Test(void);
 
 /* USER CODE END FunctionPrototypes */
 
-void StartDefaultTask(void *argument);
+void OLEDFlushTaskCode(void *argument);
+void OLEDInteractionTaskCode(void *argument);
 void LEDTimerCode(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -108,8 +116,11 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  /* creation of OLEDFlushTask */
+  OLEDFlushTaskHandle = osThreadNew(OLEDFlushTaskCode, NULL, &OLEDFlushTask_attributes);
+
+  /* creation of OLEDInteraction */
+  OLEDInteractionHandle = osThreadNew(OLEDInteractionTaskCode, NULL, &OLEDInteraction_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -121,29 +132,78 @@ void MX_FREERTOS_Init(void) {
 
 }
 
-/* USER CODE BEGIN Header_StartDefaultTask */
+/* USER CODE BEGIN Header_OLEDFlushTaskCode */
 /**
- * @brief  Function implementing the defaultTask thread.
- * @param  argument: Not used
- * @retval None
- */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
+  * @brief  Function implementing the OLEDFlushTask thread.
+  * @param  argument: Not used
+  * @retval None
+  */
+/* USER CODE END Header_OLEDFlushTaskCode */
+void OLEDFlushTaskCode(void *argument)
 {
-  /* USER CODE BEGIN StartDefaultTask */
+  /* USER CODE BEGIN OLEDFlushTaskCode */
 
   UNUSED(argument);
 
   OLED_Init(&OLED);
+  TextPage_Init(TextPage, &OLED);
+  SelectioneBar_BindTextPage(&SelectioneBar, &TextPage->LowerPages[0]);
 
   /* Infinite loop */
   for (;;)
   {
-    OLED_Test();
+    OLED_ClearBuffer(&OLED);
+
+    TextPage->UpdateCallback(TextPage, &OLED);
+    SelectioneBar_Update(&SelectioneBar);
+
+    TextPage->ShowCallback(TextPage, &OLED);
+    OLED_ShowSelectioneBar(&OLED, &SelectioneBar);
+
+    OLED_SendBuffer(&OLED);
 
     osDelay(1);
   }
-  /* USER CODE END StartDefaultTask */
+  /* USER CODE END OLEDFlushTaskCode */
+}
+
+/* USER CODE BEGIN Header_OLEDInteractionTaskCode */
+/**
+* @brief Function implementing the OLEDInteraction thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_OLEDInteractionTaskCode */
+void OLEDInteractionTaskCode(void *argument)
+{
+  /* USER CODE BEGIN OLEDInteractionTaskCode */
+
+  UNUSED(argument);
+
+  uint32_t Tick = osKernelGetTickCount();
+
+  /* Infinite loop */
+  for (;;)
+  {
+    Tick = osKernelGetTickCount();
+
+    int16_t Speed = Encoder_GetSpeed(&Encoder);
+    if (Speed >= 3)
+    {
+      TextPage->LowerPages[TextPage->Cursor].RotationCallback(TextPage, &SelectioneBar, RotationDown);
+    } else if (Speed <= -3)
+    {
+      TextPage->LowerPages[TextPage->Cursor].RotationCallback(TextPage, &SelectioneBar, RotationUp);
+    }
+
+    if (Key_WasPressed(&EncoderKey))
+    {
+      TextPage->LowerPages[TextPage->Cursor].ClickCallback(&TextPage, &SelectioneBar);
+    }
+
+    osDelayUntil(Tick + 100);
+  }
+  /* USER CODE END OLEDInteractionTaskCode */
 }
 
 /* LEDTimerCode function */

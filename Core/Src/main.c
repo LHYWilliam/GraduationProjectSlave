@@ -88,6 +88,62 @@ Encoder_t Encoder = {
     .hTIMx = &htim1,
 };
 
+TextPage_t Pages = {
+    .Title = "Home",
+    .ShowCallback = TextPage_ShowCallback,
+    .UpdateCallback = TextPage_UpdateCallback,
+    .NumOfLowerPages = 7,
+    .LowerPages = (TextPage_t[]) {
+        TextPage_Back("<"),
+        (TextPage_t) {
+            .Title = "Page 1",
+            .ShowCallback = TextPage_ShowCallback,
+            .UpdateCallback = TextPage_UpdateCallback,
+            .ClickCallback = TextPage_EnterCallback,
+            .RotationCallback = TextPage_CursorCallback,
+            .NumOfLowerPages = 4,
+            .LowerPages = (TextPage_t[]) {
+                TextPage_Back("<"),
+                (TextPage_t) {
+                    .Title = "Page 1 - 1",
+                    .RotationCallback = TextPage_CursorCallback,
+                },
+                (TextPage_t) {
+                    .Title = "Page 1 - 2",
+                    .RotationCallback = TextPage_CursorCallback,
+                },
+                (TextPage_t) {
+                    .Title = "Page 1 - 3",
+                    .RotationCallback = TextPage_CursorCallback,
+                },
+            },
+        },
+        (TextPage_t) {
+            .Title = "Page 2",
+            .RotationCallback = TextPage_CursorCallback,
+        },
+        (TextPage_t) {
+            .Title = "Page 3",
+            .RotationCallback = TextPage_CursorCallback,
+        },
+        (TextPage_t) {
+            .Title = "Page 4",
+            .RotationCallback = TextPage_CursorCallback,
+        },
+        (TextPage_t) {
+            .Title = "Page 5",
+            .RotationCallback = TextPage_CursorCallback,
+        },
+        (TextPage_t) {
+            .Title = "Page 6",
+            .RotationCallback = TextPage_CursorCallback,
+        },
+    },
+};
+TextPage_t *TextPage = &Pages;
+
+SelectioneBar_t SelectioneBar;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/

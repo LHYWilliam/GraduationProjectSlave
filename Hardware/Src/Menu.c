@@ -1,17 +1,21 @@
 #include <string.h>
 
 #include "Menu.h"
-#include "OLED.h"
 
-void EmptyCallbackPtr(struct TextPage *TextPage)
+void EmptyCallbackShowUpdate(struct TextPage *TextPage, OLED_t *OLED)
 {
   UNUSED(TextPage);
+  UNUSED(OLED);
 }
-void EmptyCallbackPtrPtr(struct TextPage **TextPage) { UNUSED(TextPage); }
-void EmptyCallbackRotation(struct TextPage *TextPage,
-                           TextPageRotation Direction)
+void EmptyCallbackClick(struct TextPage **TextPage, SelectioneBar_t *SelectioneBar)
 {
   UNUSED(TextPage);
+  UNUSED(SelectioneBar);
+}
+void EmptyCallbackRotation(struct TextPage *TextPage, SelectioneBar_t *SelectioneBar, RotationDirection Direction)
+{
+  UNUSED(TextPage);
+  UNUSED(SelectioneBar);
   UNUSED(Direction);
 }
 
@@ -30,6 +34,23 @@ void TextPage_Init(TextPage_t *TextPage, OLED_t *OLED)
     TextPage->TitleHeight = OLED->FontHeight * 2;
   }
 
+  if (TextPage->ShowCallback == NULL)
+  {
+    TextPage->ShowCallback = EmptyCallbackShowUpdate;
+  }
+  if (TextPage->UpdateCallback == NULL)
+  {
+    TextPage->UpdateCallback = EmptyCallbackShowUpdate;
+  }
+  if (TextPage->ClickCallback == NULL)
+  {
+    TextPage->ClickCallback = EmptyCallbackClick;
+  }
+  if (TextPage->RotationCallback == NULL)
+  {
+    TextPage->RotationCallback = EmptyCallbackRotation;
+  }
+
   for (uint8_t i = 0; i < TextPage->NumOfLowerPages; i++)
   {
     TextPage->LowerPages[i].Width = strlen(TextPage->LowerPages[i].Title) * OLED->FontWidth;
@@ -41,23 +62,6 @@ void TextPage_Init(TextPage_t *TextPage, OLED_t *OLED)
     } else
     {
       TextPage->LowerPages[i].UpperPage = TextPage;
-    }
-
-    if (TextPage->LowerPages[i].UpdateCallback == NULL)
-    {
-      TextPage->LowerPages[i].UpdateCallback = EmptyCallbackPtr;
-    }
-    if (TextPage->LowerPages[i].ShowCallback == NULL)
-    {
-      TextPage->LowerPages[i].ShowCallback = EmptyCallbackPtr;
-    }
-    if (TextPage->LowerPages[i].ClickCallback == NULL)
-    {
-      TextPage->LowerPages[i].ClickCallback = EmptyCallbackPtrPtr;
-    }
-    if (TextPage->LowerPages[i].RotationCallback == NULL)
-    {
-      TextPage->LowerPages[i].RotationCallback = EmptyCallbackRotation;
     }
 
     TextPage_Init(&TextPage->LowerPages[i], OLED);
@@ -142,6 +146,5 @@ void SelectioneBar_Update(SelectioneBar_t *Self)
 
 void OLED_ShowSelectioneBar(OLED_t *OLED, SelectioneBar_t *SelectioneBar)
 {
-  OLED_ReverseArea(OLED, SelectioneBar->X, SelectioneBar->Y,
-                   SelectioneBar->Width, SelectioneBar->Height);
+  OLED_ReverseArea(OLED, SelectioneBar->X, SelectioneBar->Y, SelectioneBar->Width, SelectioneBar->Height);
 }

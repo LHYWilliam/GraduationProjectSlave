@@ -19,7 +19,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Set the project name
-set(CMAKE_PROJECT_NAME GraduationProject)
+set(CMAKE_PROJECT_NAME GraduationProjectSlave)
 
 # Include toolchain file
 include("cmake/gcc-arm-none-eabi.cmake")
@@ -57,6 +57,10 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/Hardware/Src/OLED.c
     ${CMAKE_SOURCE_DIR}/Hardware/Src/OLED_I2C.c
     ${CMAKE_SOURCE_DIR}/Hardware/Src/OLED_Font.c
+    ${CMAKE_SOURCE_DIR}/Application/Show.c
+    ${CMAKE_SOURCE_DIR}/Application/Update.c
+    ${CMAKE_SOURCE_DIR}/Application/Click.c
+    ${CMAKE_SOURCE_DIR}/Application/Rotation.c
 )
 
 # Add include paths
@@ -64,6 +68,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined include paths
     ${CMAKE_SOURCE_DIR}/Util/Inc/
     ${CMAKE_SOURCE_DIR}/Hardware/Inc/
+    ${CMAKE_SOURCE_DIR}/Application/
 )
 
 # Add project symbols (macros)
