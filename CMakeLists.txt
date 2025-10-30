@@ -46,28 +46,31 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
-    ${CMAKE_SOURCE_DIR}/Util/Src/Serial.c
-    ${CMAKE_SOURCE_DIR}/Util/Src/Encoder.c
-    ${CMAKE_SOURCE_DIR}/Util/Src/Sampler.c
-    ${CMAKE_SOURCE_DIR}/Hardware/Src/LED.c
-    ${CMAKE_SOURCE_DIR}/Hardware/Src/Key.c
-    ${CMAKE_SOURCE_DIR}/Hardware/Src/Menu.c
-    ${CMAKE_SOURCE_DIR}/Hardware/Src/OLED.c
-    ${CMAKE_SOURCE_DIR}/Hardware/Src/OLED_I2C.c
-    ${CMAKE_SOURCE_DIR}/Hardware/Src/OLED_Font.c
-    ${CMAKE_SOURCE_DIR}/Application/Show.c
-    ${CMAKE_SOURCE_DIR}/Application/Update.c
+    ${CMAKE_SOURCE_DIR}/Application/Application.c
     ${CMAKE_SOURCE_DIR}/Application/Click.c
     ${CMAKE_SOURCE_DIR}/Application/Rotation.c
-    ${CMAKE_SOURCE_DIR}/Application/Application.c
+    ${CMAKE_SOURCE_DIR}/Application/Show.c
+    ${CMAKE_SOURCE_DIR}/Application/Update.c
+
+    ${CMAKE_SOURCE_DIR}/Hardware/Src/Key.c
+    ${CMAKE_SOURCE_DIR}/Hardware/Src/LED.c
+    ${CMAKE_SOURCE_DIR}/Hardware/Src/Menu.c
+    ${CMAKE_SOURCE_DIR}/Hardware/Src/MQSensor.c
+    ${CMAKE_SOURCE_DIR}/Hardware/Src/OLED_Font.c
+    ${CMAKE_SOURCE_DIR}/Hardware/Src/OLED_I2C.c
+    ${CMAKE_SOURCE_DIR}/Hardware/Src/OLED.c
+
+    ${CMAKE_SOURCE_DIR}/Util/Src/Encoder.c
+    ${CMAKE_SOURCE_DIR}/Util/Src/Sampler.c
+    ${CMAKE_SOURCE_DIR}/Util/Src/Serial.c
 )
 
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined include paths
-    ${CMAKE_SOURCE_DIR}/Util/Inc/
-    ${CMAKE_SOURCE_DIR}/Hardware/Inc/
     ${CMAKE_SOURCE_DIR}/Application/
+    ${CMAKE_SOURCE_DIR}/Hardware/Inc/
+    ${CMAKE_SOURCE_DIR}/Util/Inc/
 )
 
 # Add project symbols (macros)

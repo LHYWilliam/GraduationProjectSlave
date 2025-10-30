@@ -32,32 +32,10 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-#include "Key.h"
-#include "LED.h"
-#include "OLED.h"
-#include "Menu.h"
-#include "Serial.h"
-#include "Sampler.h"
-#include "Encoder.h"
-
-#include "Application.h"
-
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-
-extern LED_t BoardLED;
-extern Key_t BoardKey;
-extern Key_t EncoderKey;
-
-extern OLED_t OLED;
-extern Serial_t Serial;
-extern Sampler_t Sampler;
-extern Encoder_t Encoder;
-
-extern TextPage_t *TextPage;
-extern SelectioneBar_t SelectioneBar;
 
 /* USER CODE END ET */
 

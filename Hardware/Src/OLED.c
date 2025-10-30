@@ -233,17 +233,33 @@ void OLED_DrawLine(OLED_t *Self, int16_t X1, int16_t Y1, int16_t X2, int16_t Y2)
   }
 }
 
-void OLED_DrawHollowRectangle(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height)
+void OLED_DrawHollowRectangle(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height, uint8_t Step)
 {
-  OLED_DrawHLine(Self, X, Y, Width, 1);
-  OLED_DrawHLine(Self, X, Y + Height - 1, Width, 1);
-  OLED_DrawVLine(Self, X, Y, Height, 1);
-  OLED_DrawVLine(Self, X + Width - 1, Y, Height, 1);
+  OLED_DrawHLine(Self, X, Y, Width, Step);
+  OLED_DrawHLine(Self, X, Y + Height - 1, Width, Step);
+  OLED_DrawVLine(Self, X, Y, Height, Step);
+  OLED_DrawVLine(Self, X + Width - 1, Y, Height, Step);
 }
 
 void OLED_DrawSolidRectangle(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height)
 {
   OLED_FillArea(Self, X, Y, Width, Height);
+}
+
+#define Normalization(Data, Origin, Target, Offset) ((Data) * Target / Origin + Offset)
+
+void OLED_DrawChart(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height, uint16_t *Data, uint16_t Length, int16_t Index)
+{
+  for (uint8_t i = 0; i < Length - 1; i++, Index = (Index + 1) % Length)
+  {
+    OLED_DrawLine(Self,
+                  Normalization(i, Length - 1, Width, X),
+                  Normalization(4095 - Data[Index], 4095, Height, Y),
+                  Normalization(i + 1, Length - 1, Width, X),
+                  Normalization(4095 - Data[(Index + 1) % Length], 4095, Height, Y));
+  }
+
+  OLED_DrawHollowRectangle(Self, X, Y, Width, Height, 3);
 }
 
 // void OLED_ShowImage(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height, const uint8_t *Image)

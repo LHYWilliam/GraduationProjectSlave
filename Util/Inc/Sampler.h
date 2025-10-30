@@ -16,6 +16,7 @@ typedef struct
 
 void Sampler_Start_DMA(Sampler_t *Self);
 void Sampler_Start_DMA_TIM(Sampler_t *Self);
+void Sampler_Start_DMA_TIM_IT(Sampler_t *Self);
 uint16_t Sampler_GetValue(Sampler_t *Self, uint32_t Channel);
 
 

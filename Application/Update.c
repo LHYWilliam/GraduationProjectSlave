@@ -4,7 +4,7 @@ void TextPage_UpdateCallback(TextPage_t *TextPage, OLED_t *OLED)
 {
   int16_t Y = TextPage->TitleY;
 
-  if (TextPage->LowerPages->Index == 1 || TextPage->LowerPages->Index == 2)
+  if (TextPage->LowerPages->Index == 0 || TextPage->LowerPages->Index == 1)
   {
     Y = 0;
   } else if (TextPage->LowerPages->Y < 0)
@@ -19,10 +19,10 @@ void TextPage_UpdateCallback(TextPage_t *TextPage, OLED_t *OLED)
 
   for (TextPage_t *Page = TextPage->HeadPage; Page != NULL; Page = Page->DownPage)
   {
-    if (Page->Index == 1)
+    if (Page->Index == 0)
     {
       Y = Y + TextPage->TitleHeight / 4 - TextPage->HeadPage->Height / 2 + 1;
-    } else if (Page->Index == 2)
+    } else if (Page->Index == 1)
     {
       Y = TextPage->TitleY + TextPage->TitleHeight + 1;
     } else

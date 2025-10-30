@@ -11,6 +11,12 @@ void Sampler_Start_DMA_TIM(Sampler_t *Self)
   HAL_ADC_Start_DMA(Self->hADCx, (uint32_t *) Self->Buffer, Self->Length);
 }
 
+void Sampler_Start_DMA_TIM_IT(Sampler_t *Self)
+{
+  HAL_TIM_Base_Start_IT(Self->hTIMx);
+  HAL_ADC_Start_DMA(Self->hADCx, (uint32_t *) Self->Buffer, Self->Length);
+}
+
 uint16_t Sampler_GetValue(Sampler_t *Self, uint32_t Channel)
 {
   ADC_ChannelConfTypeDef sConfig = {0};

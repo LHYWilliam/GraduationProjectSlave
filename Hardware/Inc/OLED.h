@@ -44,8 +44,9 @@ void OLED_DrawPoint(OLED_t *Self, int16_t X, int16_t Y);
 void OLED_DrawHLine(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Step);
 void OLED_DrawVLine(OLED_t *Self, int16_t X, int16_t Y, uint8_t Height, uint8_t Step);
 void OLED_DrawLine(OLED_t *Self, int16_t X1, int16_t Y1, int16_t X2, int16_t Y2);
-void OLED_DrawHollowRectangle(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height);
+void OLED_DrawHollowRectangle(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height, uint8_t Step);
 void OLED_DrawSolidRectangle(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height);
+void OLED_DrawChart(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height, uint16_t *Data, uint16_t Length, int16_t Index);
 
 void OLED_ShowImage(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height, const uint8_t *Image);
 

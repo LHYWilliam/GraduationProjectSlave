@@ -29,6 +29,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "Application.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,47 +51,6 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
-LED_t BoardLED = {
-    .GPIOx = BoardLED_GPIO_Port,
-    .Pin = BoardLED_Pin,
-    .ActiveState = GPIO_PIN_SET,
-};
-
-Key_t BoardKey = {
-    .GPIOx = BoardKey_GPIO_Port,
-    .Pin = BoardKey_Pin,
-    .ActiveState = GPIO_PIN_SET,
-};
-
-Key_t EncoderKey = {
-    .GPIOx = EncoderKey_GPIO_Port,
-    .Pin = EncoderKey_Pin,
-    .ActiveState = GPIO_PIN_RESET,
-};
-
-OLED_t OLED = {
-    .hI2Cx = &hi2c1,
-};
-
-Serial_t Serial = {
-    .hUARTx = &huart3,
-};
-
-uint16_t Buffer[2];
-Sampler_t Sampler = {
-    .hADCx = &hadc1,
-    .hTIMx = &htim3,
-    .Length = 2,
-    .Buffer = Buffer,
-};
-
-Encoder_t Encoder = {
-    .hTIMx = &htim1,
-};
-
-TextPage_t *TextPage;
-SelectioneBar_t SelectioneBar;
 
 /* USER CODE END PV */
 
@@ -140,15 +101,13 @@ int main(void)
   MX_I2C1_Init();
   MX_TIM1_Init();
   MX_USART3_UART_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-
-  Encoder_Start(&Encoder);
-  Sampler_Start_DMA_TIM(&Sampler);
 
   /* USER CODE END 2 */
 
   /* Init scheduler */
-  osKernelInitialize(); /* Call init function for freertos objects (in cmsis_os2.c) */
+  osKernelInitialize();  /* Call init function for freertos objects (in cmsis_os2.c) */
   MX_FREERTOS_Init();
 
   /* Start scheduler */
@@ -194,7 +153,8 @@ void SystemClock_Config(void)
 
   /** Initializes the CPU, AHB and APB buses clocks
   */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
@@ -227,6 +187,14 @@ void SystemClock_Config(void)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   /* USER CODE BEGIN Callback 0 */
+
+  if (htim->Instance == TIM3)
+  {
+    for (uint8_t i = 0; i < sizeof(MQxSensor) / sizeof(MQxSensor[0]); i++)
+    {
+      MQSensor_Update(&MQxSensor[i], Sampler.Buffer[i]);
+    }
+  }
 
   /* USER CODE END Callback 0 */
   if (htim->Instance == TIM4)
