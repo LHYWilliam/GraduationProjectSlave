@@ -48,10 +48,14 @@ typedef struct TextPage
   uint8_t TitleWidth;
   uint8_t TitleHeight;
 
-  uint8_t Cursor;
+  uint8_t Index;
   uint8_t NumOfLowerPages;
-  struct TextPage *LowerPages;
+  struct TextPage *UpPage;
+  struct TextPage *DownPage;
+  struct TextPage *HeadPage;
+  struct TextPage *TailPage;
   struct TextPage *UpperPage;
+  struct TextPage *LowerPages;
 
   ParameterType ParameterType;
   union
@@ -72,11 +76,11 @@ typedef struct TextPage
 } TextPage_t;
 
 void TextPage_Init(TextPage_t *TextPage, OLED_t *OLED);
-ErrorStatus TextPage_CursorInc(TextPage_t *Self);
-ErrorStatus TextPage_CursorDec(TextPage_t *Self);
-ErrorStatus TextPage_EnterLowerPage(TextPage_t **Self);
-ErrorStatus TextPage_ReturnUpperPage(TextPage_t **Self);
-void TextPage_Reset(TextPage_t *Self);
+void TextPage_AddLowerPage(TextPage_t *Self, TextPage_t *LowerPage);
+void TextPage_CursorInc(TextPage_t *Self);
+void TextPage_CursorDec(TextPage_t *Self);
+void TextPage_EnterLowerPage(TextPage_t **Self);
+void TextPage_ReturnUpperPage(TextPage_t **Self);
 
 void SelectioneBar_BindTextPage(SelectioneBar_t *Self, TextPage_t *TextPage);
 void SelectioneBar_Update(SelectioneBar_t *Self);

@@ -13,7 +13,9 @@ FlagStatus Key_WasPressed(Key_t *Self)
   {
     osDelay(10);
     while (Key_IsPressing(Self))
-      ;
+    {
+      osDelay(1);
+    }
     osDelay(10);
 
     return SET;

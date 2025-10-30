@@ -19,6 +19,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "FreeRTOS.h"
+#include "Menu.h"
 #include "task.h"
 #include "main.h"
 #include "cmsis_os.h"
@@ -50,22 +51,21 @@
 /* Definitions for OLEDFlushTask */
 osThreadId_t OLEDFlushTaskHandle;
 const osThreadAttr_t OLEDFlushTask_attributes = {
-  .name = "OLEDFlushTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+    .name = "OLEDFlushTask",
+    .stack_size = 128 * 4,
+    .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for OLEDInteraction */
 osThreadId_t OLEDInteractionHandle;
 const osThreadAttr_t OLEDInteraction_attributes = {
-  .name = "OLEDInteraction",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
+    .name = "OLEDInteraction",
+    .stack_size = 128 * 4,
+    .priority = (osPriority_t) osPriorityHigh,
 };
 /* Definitions for LEDTimer */
 osTimerId_t LEDTimerHandle;
 const osTimerAttr_t LEDTimer_attributes = {
-  .name = "LEDTimer"
-};
+    .name = "LEDTimer"};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -87,7 +87,8 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   * @param  None
   * @retval None
   */
-void MX_FREERTOS_Init(void) {
+void MX_FREERTOS_Init(void)
+{
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
@@ -129,7 +130,6 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
-
 }
 
 /* USER CODE BEGIN Header_OLEDFlushTaskCode */
@@ -146,8 +146,8 @@ void OLEDFlushTaskCode(void *argument)
   UNUSED(argument);
 
   OLED_Init(&OLED);
-  TextPage_Init(TextPage, &OLED);
-  SelectioneBar_BindTextPage(&SelectioneBar, &TextPage->LowerPages[0]);
+  Application_Init(&TextPage, &OLED);
+  SelectioneBar_BindTextPage(&SelectioneBar, TextPage->HeadPage);
 
   /* Infinite loop */
   for (;;)
@@ -190,15 +190,15 @@ void OLEDInteractionTaskCode(void *argument)
     int16_t Speed = Encoder_GetSpeed(&Encoder);
     if (Speed >= 3)
     {
-      TextPage->LowerPages[TextPage->Cursor].RotationCallback(TextPage, &SelectioneBar, RotationDown);
+      TextPage->LowerPages->RotationCallback(TextPage, &SelectioneBar, RotationDown);
     } else if (Speed <= -3)
     {
-      TextPage->LowerPages[TextPage->Cursor].RotationCallback(TextPage, &SelectioneBar, RotationUp);
+      TextPage->LowerPages->RotationCallback(TextPage, &SelectioneBar, RotationUp);
     }
 
     if (Key_WasPressed(&EncoderKey))
     {
-      TextPage->LowerPages[TextPage->Cursor].ClickCallback(&TextPage, &SelectioneBar);
+      TextPage->LowerPages->ClickCallback(&TextPage, &SelectioneBar);
     }
 
     osDelayUntil(Tick + 100);
@@ -297,4 +297,3 @@ void Encoder_Test(void)
 }
 
 /* USER CODE END Application */
-

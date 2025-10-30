@@ -6,7 +6,7 @@
         {
             "label": "Build",
             "type": "shell",
-            "command": "cube-cmake --build C:/Code/Embedded/C/GraduationProjectSlave/build/Debug --"
+            "command": "cube-cmake --build /home/william/Code/Embedded/GraduationProjectSlave/build/Debug --"
         },
         {
             "label": "Flash",

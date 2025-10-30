@@ -3,6 +3,8 @@
 
 #include "Menu.h"
 
+void Application_Init(TextPage_t **TextPage, OLED_t *OLED);
+
 void TextPage_ShowCallback(TextPage_t *TextPage, OLED_t *OLED);
 
 void TextPage_UpdateCallback(TextPage_t *TextPage, OLED_t *OLED);
@@ -18,13 +20,13 @@ void TextPage_CursorCallback(TextPage_t *TextPage, SelectioneBar_t *SelectioneBa
     OLED_Printf(OLED, TextPage->TitleX, TextPage->TitleY, TextPage->Title);             \
   }                                                                                     \
                                                                                         \
-  for (uint8_t i = 0; i < TextPage->NumOfLowerPages; i++)                               \
+  for (TextPage_t *Page = TextPage->HeadPage; Page != NULL; Page = Page->DownPage)      \
   {                                                                                     \
-    if (TextPage->LowerPages[i].Y + TextPage->LowerPages[i].Height < 0)                 \
+    if (Page->Y + Page->Height < 0)                                                     \
     {                                                                                   \
       continue;                                                                         \
     }                                                                                   \
-    if (TextPage->LowerPages[i].Y >= OLED->Height)                                      \
+    if (Page->Y >= OLED->Height)                                                        \
     {                                                                                   \
       break;                                                                            \
     }                                                                                   \

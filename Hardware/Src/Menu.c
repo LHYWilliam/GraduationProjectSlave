@@ -51,81 +51,87 @@ void TextPage_Init(TextPage_t *TextPage, OLED_t *OLED)
     TextPage->RotationCallback = EmptyCallbackRotation;
   }
 
-  for (uint8_t i = 0; i < TextPage->NumOfLowerPages; i++)
+  for (TextPage_t *Page = TextPage->HeadPage; Page != NULL; Page = Page->DownPage)
   {
-    TextPage->LowerPages[i].Width = strlen(TextPage->LowerPages[i].Title) * OLED->FontWidth;
-    TextPage->LowerPages[i].Height = OLED->FontHeight;
+    Page->Width = strlen(Page->Title) * OLED->FontWidth;
+    Page->Height = OLED->FontHeight;
 
-    if (i == 0)
+    if (Page->Index == 1)
     {
-      TextPage->LowerPages[i].UpperPage = TextPage->UpperPage;
+      Page->UpperPage = TextPage->UpperPage;
     } else
     {
-      TextPage->LowerPages[i].UpperPage = TextPage;
+      Page->UpperPage = TextPage;
     }
 
-    TextPage_Init(&TextPage->LowerPages[i], OLED);
+    TextPage_Init(Page, OLED);
   }
 }
 
-void TextPage_Reset(TextPage_t *Self)
+void TextPage_AddLowerPage(TextPage_t *Self, TextPage_t *LowerPage)
 {
-  for (uint8_t i = Self->Cursor; i < Self->NumOfLowerPages; i++)
+  if (Self->LowerPages == NULL)
   {
-    Self->LowerPages[i].Y = 0;
-  }
-  for (int8_t i = Self->Cursor - 1; i >= 0; i--)
+    Self->HeadPage = LowerPage;
+    Self->TailPage = LowerPage;
+    Self->LowerPages = LowerPage;
+  } else
   {
-    Self->LowerPages[i].Y = Self->LowerPages[i + 1].Y - Self->LowerPages[i].Height - 2;
+    Self->TailPage->DownPage = LowerPage;
+    LowerPage->UpPage = Self->TailPage;
+    Self->TailPage = Self->TailPage->DownPage;
   }
+
+  Self->NumOfLowerPages++;
+  LowerPage->Index = Self->NumOfLowerPages;
 }
 
-ErrorStatus TextPage_CursorInc(TextPage_t *Self)
+void TextPage_CursorInc(TextPage_t *Self)
 {
-  if (Self->NumOfLowerPages >= 2)
+  if (Self->LowerPages == NULL)
   {
-    Self->Cursor = (Self->Cursor + 1) % Self->NumOfLowerPages;
-
-    return SUCCESS;
+    return;
   }
 
-  return ERROR;
+  if (Self->LowerPages->DownPage != NULL)
+  {
+    Self->LowerPages = Self->LowerPages->DownPage;
+  } else
+  {
+    Self->LowerPages = Self->HeadPage;
+  }
 }
 
-ErrorStatus TextPage_CursorDec(TextPage_t *Self)
+void TextPage_CursorDec(TextPage_t *Self)
 {
-  if (Self->NumOfLowerPages >= 2)
+  if (Self->LowerPages == NULL)
   {
-    Self->Cursor = (Self->Cursor + Self->NumOfLowerPages - 1) % Self->NumOfLowerPages;
-
-    return SUCCESS;
+    return;
   }
 
-  return ERROR;
+  if (Self->LowerPages->UpPage != NULL)
+  {
+    Self->LowerPages = Self->LowerPages->UpPage;
+  } else
+  {
+    Self->LowerPages = Self->TailPage;
+  }
 }
 
-ErrorStatus TextPage_EnterLowerPage(TextPage_t **Self)
+void TextPage_EnterLowerPage(TextPage_t **Self)
 {
-  if ((*Self)->LowerPages[(*Self)->Cursor].NumOfLowerPages != 0)
+  if ((*Self)->LowerPages != NULL)
   {
-    *Self = &(*Self)->LowerPages[(*Self)->Cursor];
-
-    return SUCCESS;
+    *Self = (*Self)->LowerPages;
   }
-
-  return ERROR;
 }
 
-ErrorStatus TextPage_ReturnUpperPage(TextPage_t **Self)
+void TextPage_ReturnUpperPage(TextPage_t **Self)
 {
   if ((*Self)->UpperPage != NULL)
   {
     *Self = (*Self)->UpperPage;
-
-    return SUCCESS;
   }
-
-  return ERROR;
 }
 
 void SelectioneBar_BindTextPage(SelectioneBar_t *SelectioneBar, TextPage_t *TextPage)

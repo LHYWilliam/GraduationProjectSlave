@@ -5,17 +5,15 @@ void TextPage_CursorCallback(TextPage_t *TextPage, SelectioneBar_t *SelectioneBa
   switch (Direction)
   {
   case RotationUp:
-    if (TextPage_CursorDec(TextPage) == SUCCESS)
-    {
-      SelectioneBar_BindTextPage(SelectioneBar, &TextPage->LowerPages[TextPage->Cursor]);
-    }
+    TextPage_CursorDec(TextPage);
+    SelectioneBar_BindTextPage(SelectioneBar, TextPage->LowerPages);
+
     break;
 
   case RotationDown:
-    if (TextPage_CursorInc(TextPage) == SUCCESS)
-    {
-      SelectioneBar_BindTextPage(SelectioneBar, &TextPage->LowerPages[TextPage->Cursor]);
-    }
+    TextPage_CursorInc(TextPage);
+    SelectioneBar_BindTextPage(SelectioneBar, TextPage->LowerPages);
+
     break;
   }
 }

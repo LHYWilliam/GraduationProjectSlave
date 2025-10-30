@@ -59,6 +59,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/Application/Update.c
     ${CMAKE_SOURCE_DIR}/Application/Click.c
     ${CMAKE_SOURCE_DIR}/Application/Rotation.c
+    ${CMAKE_SOURCE_DIR}/Application/Application.c
 )
 
 # Add include paths

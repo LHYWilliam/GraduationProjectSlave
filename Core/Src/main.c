@@ -88,60 +88,7 @@ Encoder_t Encoder = {
     .hTIMx = &htim1,
 };
 
-TextPage_t Pages = {
-    .Title = "Home",
-    .ShowCallback = TextPage_ShowCallback,
-    .UpdateCallback = TextPage_UpdateCallback,
-    .NumOfLowerPages = 7,
-    .LowerPages = (TextPage_t[]) {
-        TextPage_Back("<"),
-        (TextPage_t) {
-            .Title = "Page 1",
-            .ShowCallback = TextPage_ShowCallback,
-            .UpdateCallback = TextPage_UpdateCallback,
-            .ClickCallback = TextPage_EnterCallback,
-            .RotationCallback = TextPage_CursorCallback,
-            .NumOfLowerPages = 4,
-            .LowerPages = (TextPage_t[]) {
-                TextPage_Back("<"),
-                (TextPage_t) {
-                    .Title = "Page 1 - 1",
-                    .RotationCallback = TextPage_CursorCallback,
-                },
-                (TextPage_t) {
-                    .Title = "Page 1 - 2",
-                    .RotationCallback = TextPage_CursorCallback,
-                },
-                (TextPage_t) {
-                    .Title = "Page 1 - 3",
-                    .RotationCallback = TextPage_CursorCallback,
-                },
-            },
-        },
-        (TextPage_t) {
-            .Title = "Page 2",
-            .RotationCallback = TextPage_CursorCallback,
-        },
-        (TextPage_t) {
-            .Title = "Page 3",
-            .RotationCallback = TextPage_CursorCallback,
-        },
-        (TextPage_t) {
-            .Title = "Page 4",
-            .RotationCallback = TextPage_CursorCallback,
-        },
-        (TextPage_t) {
-            .Title = "Page 5",
-            .RotationCallback = TextPage_CursorCallback,
-        },
-        (TextPage_t) {
-            .Title = "Page 6",
-            .RotationCallback = TextPage_CursorCallback,
-        },
-    },
-};
-TextPage_t *TextPage = &Pages;
-
+TextPage_t *TextPage;
 SelectioneBar_t SelectioneBar;
 
 /* USER CODE END PV */
@@ -201,7 +148,7 @@ int main(void)
   /* USER CODE END 2 */
 
   /* Init scheduler */
-  osKernelInitialize();  /* Call init function for freertos objects (in cmsis_os2.c) */
+  osKernelInitialize(); /* Call init function for freertos objects (in cmsis_os2.c) */
   MX_FREERTOS_Init();
 
   /* Start scheduler */
@@ -247,8 +194,7 @@ void SystemClock_Config(void)
 
   /** Initializes the CPU, AHB and APB buses clocks
   */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
