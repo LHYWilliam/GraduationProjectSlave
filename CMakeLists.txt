@@ -61,6 +61,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/Hardware/Src/OLED.c
 
     ${CMAKE_SOURCE_DIR}/Util/Src/Encoder.c
+    ${CMAKE_SOURCE_DIR}/Util/Src/PID.c
     ${CMAKE_SOURCE_DIR}/Util/Src/Sampler.c
     ${CMAKE_SOURCE_DIR}/Util/Src/Serial.c
 )

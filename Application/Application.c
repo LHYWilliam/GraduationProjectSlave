@@ -73,77 +73,58 @@ MQSensor_t MQxSensor[2] = {
 };
 
 
-void Application_Init(TextPage_t **TextPage, OLED_t *OLED)
+void Application_Init(void)
 {
-  static TextPage_t HomePage =
-      {
-          .Title = "Home",
-          .ShowCallback = TextPage_ShowCallback,
-          .UpdateCallback = TextPage_UpdateCallback,
-      };
-  *TextPage = &HomePage;
+  Encoder_Start(&Encoder);
+  Sampler_Start_DMA_TIM_IT(&Sampler);
 
-  static TextPage_t PageBack = TextPage_Back("<");
-  TextPage_AddLowerPage(&HomePage, &PageBack);
+  OLED_Init(&OLED);
 
-  static TextPage_t MQxPage =
-      {
-          .Title = "MQxPage",
-          .ShowCallback = TextPage_ShowCallback,
-          .UpdateCallback = TextPage_UpdateCallback,
-          .ClickCallback = TextPage_EnterCallback,
-          .RotationCallback = TextPage_CursorCallback,
-      };
+  static TextPage_t HomePage = TextPage_NavigationPage("Home");
+  TextPage = &HomePage;
+
+  static TextPage_t BackPage = TextPage_BackPage("<");
+  TextPage_AddLowerPage(&HomePage, &BackPage);
+
+  static TextPage_t MQxPage = TextPage_NavigationPage("MQxPage");
   TextPage_AddLowerPage(&HomePage, &MQxPage);
 
   {
-    static TextPage_t PageBack = TextPage_Back("<");
-    TextPage_AddLowerPage(&MQxPage, &PageBack);
+    static TextPage_t BackPage = TextPage_BackPage("<");
+    TextPage_AddLowerPage(&MQxPage, &BackPage);
 
     {
-      static TextPage_t MQ2Page = {
-          .Title = "MQ2",
-          .ShowCallback = TextPage_ShowMQSensorCallback,
-          .ClickCallback = TextPage_EnterCallback,
-          .RotationCallback = TextPage_CursorCallback,
-      };
+      static TextPage_t MQ2Page = TextPage_MQxPage("MQ2");
       TextPage_AddLowerPage(&MQxPage, &MQ2Page);
 
       {
-        static TextPage_t PageBack = {
-            .Title = "<",
-            .Y = 1,
-            .ClickCallback = TextPage_BackCallback,
-        };
-        TextPage_AddLowerPage(&MQ2Page, &PageBack);
+        static TextPage_t BackPage = TextPage_BackPage("<");
+        BackPage.Y = 1;
+        BackPage.RotationCallback = NULL;
+        TextPage_AddLowerPage(&MQ2Page, &BackPage);
 
         static TextPage_t MQ2ChartPage;
-        MQ2ChartPage = (TextPage_t) TextPage_Chart("MQ2");
+        MQ2ChartPage = (TextPage_t) TextPage_ChartPage("MQ2");
         TextPage_AddLowerPage(&MQ2Page, &MQ2ChartPage);
       }
 
-      static TextPage_t MQ3Page = {
-          .Title = "MQ3",
-          .ShowCallback = TextPage_ShowMQSensorCallback,
-          .ClickCallback = TextPage_EnterCallback,
-          .RotationCallback = TextPage_CursorCallback,
-      };
+      static TextPage_t MQ3Page = TextPage_MQxPage("MQ3");
       TextPage_AddLowerPage(&MQxPage, &MQ3Page);
 
       {
-        static TextPage_t PageBack = {
-            .Title = "<",
-            .Y = 1,
-            .ClickCallback = TextPage_BackCallback,
-        };
-        TextPage_AddLowerPage(&MQ3Page, &PageBack);
+        static TextPage_t BackPage = TextPage_BackPage("<");
+        BackPage.Y = 1;
+        BackPage.RotationCallback = NULL;
+        TextPage_AddLowerPage(&MQ3Page, &BackPage);
 
         static TextPage_t MQ3ChartPage;
-        MQ3ChartPage = (TextPage_t) TextPage_Chart("MQ3");
+        MQ3ChartPage = (TextPage_t) TextPage_ChartPage("MQ3");
         TextPage_AddLowerPage(&MQ3Page, &MQ3ChartPage);
       }
     }
   }
 
-  TextPage_Init(*TextPage, OLED);
+  TextPage_Init(&HomePage, &OLED);
+
+  SelectioneBar_BindTextPage(&SelectioneBar, HomePage.HeadPage);
 }

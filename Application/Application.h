@@ -30,7 +30,7 @@ extern MQSensor_t MQxSensor[2];
 extern TextPage_t *TextPage;
 extern SelectioneBar_t SelectioneBar;
 
-void Application_Init(TextPage_t **TextPage, OLED_t *OLED);
+void Application_Init(void);
 
 void TextPage_ShowCallback(TextPage_t *TextPage, OLED_t *OLED);
 void TextPage_ShowMQSensorCallback(TextPage_t *TextPage, OLED_t *OLED);
@@ -59,19 +59,36 @@ void TextPage_CursorCallback(TextPage_t *TextPage, SelectioneBar_t *SelectioneBa
     __VA_ARGS__                                                                         \
   }
 
-#define TextPage_Back(title)                       \
+#define TextPage_BackPage(title)                   \
   {                                                \
       .Title = title,                              \
       .ClickCallback = TextPage_BackCallback,      \
       .RotationCallback = TextPage_CursorCallback, \
   }
 
-#define TextPage_Chart(title)          \
-  {                                    \
-      .Title = title,                  \
-      .TitleY = OLED->Height / 4,      \
-      .TitleWidth = OLED->Width,       \
-      .TitleHeight = OLED->Height / 2, \
+#define TextPage_NavigationPage(title)             \
+  {                                                \
+      .Title = title,                              \
+      .ShowCallback = TextPage_ShowCallback,       \
+      .UpdateCallback = TextPage_UpdateCallback,   \
+      .ClickCallback = TextPage_EnterCallback,     \
+      .RotationCallback = TextPage_CursorCallback, \
+  }
+
+#define TextPage_MQxPage(title)                      \
+  {                                                  \
+      .Title = title,                                \
+      .ShowCallback = TextPage_ShowMQSensorCallback, \
+      .ClickCallback = TextPage_EnterCallback,       \
+      .RotationCallback = TextPage_CursorCallback,   \
+  }
+
+#define TextPage_ChartPage(title)     \
+  {                                   \
+      .Title = title,                 \
+      .TitleY = OLED.Height / 4,      \
+      .TitleWidth = OLED.Width,       \
+      .TitleHeight = OLED.Height / 2, \
   }
 
 #define ADCToVoltage(ADC) ((float) (ADC) * 3.3 / 4095.0)

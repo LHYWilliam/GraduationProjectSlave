@@ -12,8 +12,18 @@ void TextPage_ShowMQSensorCallback(TextPage_t *TextPage, OLED_t *OLED)
   TextPage_t *Page = TextPage->HeadPage;
 
   OLED_Printf(OLED, Page->X, Page->Y, Page->Title);
-  OLED_Printf(OLED, Page->X + OLED->FontWidth * 2, Page->Y, "%s %s", TextPage->Title, MQxSensor[Index].State ? "Safe" : "Danger");
-  OLED_Printf(OLED, Page->X, OLED->Height - OLED->FontHeight, "%.3f V", ADCToVoltage(MQSensor_GetData(&MQxSensor[Index])));
+  OLED_Printf(
+      OLED,
+      Page->X + OLED->FontWidth * 2,
+      Page->Y,
+      "%s %s",
+      TextPage->Title, MQxSensor[Index].State ? "Safe" : "Danger");
+  OLED_Printf(
+      OLED,
+      Page->X,
+      OLED->Height - OLED->FontHeight,
+      "%.3f V",
+      ADCToVoltage(MQSensor_GetData(&MQxSensor[Index])));
 
   Page = Page->DownPage;
 

@@ -147,12 +147,7 @@ void OLEDFlushTaskCode(void *argument)
 
   UNUSED(argument);
 
-  Encoder_Start(&Encoder);
-  Sampler_Start_DMA_TIM_IT(&Sampler);
-
-  OLED_Init(&OLED);
-  Application_Init(&TextPage, &OLED);
-  SelectioneBar_BindTextPage(&SelectioneBar, TextPage->HeadPage);
+  Application_Init();
 
   /* Infinite loop */
   for (;;)
