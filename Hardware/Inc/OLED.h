@@ -5,6 +5,8 @@
 
 #include "OLED_Font.h"
 
+#define Normalization(Data, Origin, Target, Offset) ((Data) * (Target) / (Origin) + (Offset))
+
 typedef struct OLED_t
 {
   FlagStatus I2C;

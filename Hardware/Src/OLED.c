@@ -246,17 +246,16 @@ void OLED_DrawSolidRectangle(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, 
   OLED_FillArea(Self, X, Y, Width, Height);
 }
 
-#define Normalization(Data, Origin, Target, Offset) ((Data) * Target / Origin + Offset)
-
 void OLED_DrawChart(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height, uint16_t *Data, uint16_t Length, int16_t Index)
 {
   for (uint8_t i = 0; i < Length - 1; i++, Index = (Index + 1) % Length)
   {
-    OLED_DrawLine(Self,
-                  Normalization(i, Length - 1, Width, X),
-                  Normalization(4095 - Data[Index], 4095, Height, Y),
-                  Normalization(i + 1, Length - 1, Width, X),
-                  Normalization(4095 - Data[(Index + 1) % Length], 4095, Height, Y));
+    OLED_DrawLine(
+        Self,
+        Normalization(i, Length - 2, Width - 1, X),
+        Normalization(4095 - Data[Index], 4095, Height - 1, Y),
+        Normalization(i + 1, Length - 2, Width - 1, X),
+        Normalization(4095 - Data[(Index + 1) % Length], 4095, Height - 1, Y));
   }
 
   OLED_DrawHollowRectangle(Self, X, Y, Width, Height, 3);
@@ -416,8 +415,7 @@ void OLED_Printf(OLED_t *Self, int16_t X, int16_t Y, const char *Format, ...)
 
 void OLED_ClearBuffer(OLED_t *Self) { OLED_Clear(Self); }
 
-void OLED_ClearBufferArea(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width,
-                          uint8_t Height)
+void OLED_ClearBufferArea(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height)
 {
   OLED_ClearArea(Self, X, Y, Width, Height);
 }
@@ -437,8 +435,7 @@ void OLED_SendBuffer(OLED_t *Self)
   Self->OLED_WriteDatas(Self, (uint8_t *) Self->DisplayBuffer, Self->Width * Self->Height / 8);
 }
 
-void OLED_SendBufferArea(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width,
-                         uint8_t Height)
+void OLED_SendBufferArea(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height)
 {
   int16_t Page = Y / 8;
   int16_t Page1 = (Y + Height - 1) / 8 + 1;

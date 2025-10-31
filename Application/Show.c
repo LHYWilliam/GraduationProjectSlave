@@ -8,21 +8,27 @@ void TextPage_ShowCallback(TextPage_t *TextPage, OLED_t *OLED)
 
 void TextPage_ShowMQSensorCallback(TextPage_t *TextPage, OLED_t *OLED)
 {
+  uint8_t Index = TextPage->Index - 1;
   TextPage_t *Page = TextPage->HeadPage;
 
   OLED_Printf(OLED, Page->X, Page->Y, Page->Title);
-
-  // OLED_Printf(&OLED, 16, 1, "%s %s", TextMenu.Page->Title, MQSensor[TextMenu.Page->UpperPage->Cursor - 1].State ? "Danger" : "Safe");
-
-  // OLED_Printf(OLED, 0, OLED->Height - OLED->FontHeight, "%.3f V", ADCToVoltage(MQSensor[TextMenu.Page->UpperPage->Cursor - 1].Data[MQSensor[TextMenu.Page->UpperPage->Cursor - 1].Index]));
+  OLED_Printf(OLED, Page->X + OLED->FontWidth * 2, Page->Y, "%s %s", TextPage->Title, MQxSensor[Index].State ? "Safe" : "Danger");
+  OLED_Printf(OLED, Page->X, OLED->Height - OLED->FontHeight, "%.3f V", ADCToVoltage(MQSensor_GetData(&MQxSensor[Index])));
 
   Page = Page->DownPage;
 
-  OLED_DrawChart(OLED,
-                 Page->TitleX, Page->TitleY,
-                 Page->TitleWidth, Page->TitleHeight,
-                 MQxSensor[Page->UpperPage->Index - 1].Data,
-                 MQxSensor[Page->UpperPage->Index - 1].Length,
-                 MQxSensor[Page->UpperPage->Index - 1].Index);
-  // OLED_DrawHLine(OLED, TextMenu.Page->TitleX, OLED_ADCToY(MQSensor[TextMenu.Page->UpperPage->Cursor - 1].Threshold, TextMenu.Page->TitleY, TextMenu.Page->TitleHeight), TextMenu.Page->TitleWidth, 2);
+  OLED_DrawChart(
+      OLED,
+      Page->TitleX, Page->TitleY,
+      Page->TitleWidth, Page->TitleHeight,
+      MQxSensor[Index].Data,
+      MQxSensor[Index].Length,
+      MQxSensor[Index].Index);
+
+  OLED_DrawHLine(
+      OLED,
+      Page->TitleX,
+      Normalization(4095 - MQxSensor[Index].Threshold, 4095, Page->TitleHeight - 1, Page->TitleY),
+      Page->TitleWidth,
+      2);
 }

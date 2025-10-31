@@ -74,4 +74,7 @@ void TextPage_CursorCallback(TextPage_t *TextPage, SelectioneBar_t *SelectioneBa
       .TitleHeight = OLED->Height / 2, \
   }
 
+#define ADCToVoltage(ADC) ((float) (ADC) * 3.3 / 4095.0)
+#define VoltageToADC(Voltage) ((uint16_t) ((Voltage) / 3.3 * 4095.0))
+
 #endif

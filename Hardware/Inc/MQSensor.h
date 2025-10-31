@@ -3,11 +3,21 @@
 
 #include "stm32f1xx_hal.h"
 
+typedef enum
+{
+  MQSensorDanger,
+  MQSensorSafe,
+} MQSensor_State;
+
 typedef struct
 {
   uint16_t *Data;
   uint16_t Length;
   uint16_t Index;
+
+  uint16_t Threshold;
+  uint16_t Relaxation;
+  MQSensor_State State;
 } MQSensor_t;
 
 void MQSensor_Update(MQSensor_t *Self, uint16_t Data);

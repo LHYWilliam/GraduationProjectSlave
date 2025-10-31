@@ -53,7 +53,7 @@
 osThreadId_t OLEDFlushTaskHandle;
 const osThreadAttr_t OLEDFlushTask_attributes = {
   .name = "OLEDFlushTask",
-  .stack_size = 128 * 4,
+  .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for OLEDInteraction */

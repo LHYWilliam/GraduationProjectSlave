@@ -57,14 +57,18 @@ MQSensor_t MQ3Sensor = {
     .Length = MQ3DataLength,
 };
 
+#define Threshold Threshold = VoltageToADC(2.048), .Relaxation = VoltageToADC(0.128)
+
 MQSensor_t MQxSensor[2] = {
     {
         .Data = MQ2Data,
         .Length = MQ2DataLength,
+        .Threshold,
     },
     {
         .Data = MQ3Data,
         .Length = MQ3DataLength,
+        .Threshold,
     },
 };
 
@@ -97,8 +101,7 @@ void Application_Init(TextPage_t **TextPage, OLED_t *OLED)
     TextPage_AddLowerPage(&MQxPage, &PageBack);
 
     {
-      static TextPage_t MQ2Page;
-      MQ2Page = (TextPage_t) {
+      static TextPage_t MQ2Page = {
           .Title = "MQ2",
           .ShowCallback = TextPage_ShowMQSensorCallback,
           .ClickCallback = TextPage_EnterCallback,
@@ -109,6 +112,7 @@ void Application_Init(TextPage_t **TextPage, OLED_t *OLED)
       {
         static TextPage_t PageBack = {
             .Title = "<",
+            .Y = 1,
             .ClickCallback = TextPage_BackCallback,
         };
         TextPage_AddLowerPage(&MQ2Page, &PageBack);
@@ -118,8 +122,7 @@ void Application_Init(TextPage_t **TextPage, OLED_t *OLED)
         TextPage_AddLowerPage(&MQ2Page, &MQ2ChartPage);
       }
 
-      static TextPage_t MQ3Page;
-      MQ3Page = (TextPage_t) {
+      static TextPage_t MQ3Page = {
           .Title = "MQ3",
           .ShowCallback = TextPage_ShowMQSensorCallback,
           .ClickCallback = TextPage_EnterCallback,
@@ -130,6 +133,7 @@ void Application_Init(TextPage_t **TextPage, OLED_t *OLED)
       {
         static TextPage_t PageBack = {
             .Title = "<",
+            .Y = 1,
             .ClickCallback = TextPage_BackCallback,
         };
         TextPage_AddLowerPage(&MQ3Page, &PageBack);
