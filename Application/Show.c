@@ -6,7 +6,19 @@ void TextPage_ShowCallback(TextPage_t *TextPage, OLED_t *OLED)
       OLED_Printf(OLED, Page->X, Page->Y, Page->Title););
 }
 
-void TextPage_ShowMQSensorCallback(TextPage_t *TextPage, OLED_t *OLED)
+void TextPage_ShowMQxPageCallback(TextPage_t *TextPage, OLED_t *OLED)
+{
+  ShowTitleAndTexts(
+      if (Page->Index == 0) {
+        OLED_Printf(OLED, Page->X, Page->Y, Page->Title);
+      } else {
+        OLED_Printf(OLED, Page->X, Page->Y, Page->Title);
+        OLED_Printf(OLED, OLED->Width / 2, Page->Y, "%.3f V",
+                    ADCToVoltage(MQSensor_GetData(&MQxSensor[Page->Index - 1])));
+      });
+}
+
+void TextPage_ShowMQPageCallback(TextPage_t *TextPage, OLED_t *OLED)
 {
   uint8_t Index = TextPage->Index - 1;
   TextPage_t *Page = TextPage->HeadPage;

@@ -33,7 +33,8 @@ extern SelectioneBar_t SelectioneBar;
 void Application_Init(void);
 
 void TextPage_ShowCallback(TextPage_t *TextPage, OLED_t *OLED);
-void TextPage_ShowMQSensorCallback(TextPage_t *TextPage, OLED_t *OLED);
+void TextPage_ShowMQxPageCallback(TextPage_t *TextPage, OLED_t *OLED);
+void TextPage_ShowMQPageCallback(TextPage_t *TextPage, OLED_t *OLED);
 void TextPage_UpdateCallback(TextPage_t *TextPage, OLED_t *OLED);
 void TextPage_BackCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar);
 void TextPage_EnterCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar);
@@ -75,12 +76,12 @@ void TextPage_CursorCallback(TextPage_t *TextPage, SelectioneBar_t *SelectioneBa
       .RotationCallback = TextPage_CursorCallback, \
   }
 
-#define TextPage_MQxPage(title)                      \
-  {                                                  \
-      .Title = title,                                \
-      .ShowCallback = TextPage_ShowMQSensorCallback, \
-      .ClickCallback = TextPage_EnterCallback,       \
-      .RotationCallback = TextPage_CursorCallback,   \
+#define TextPage_MQxPage(title)                    \
+  {                                                \
+      .Title = title,                              \
+      .ShowCallback = TextPage_ShowMQPageCallback, \
+      .ClickCallback = TextPage_EnterCallback,     \
+      .RotationCallback = TextPage_CursorCallback, \
   }
 
 #define TextPage_ChartPage(title)     \

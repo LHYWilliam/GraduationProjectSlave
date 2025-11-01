@@ -45,17 +45,9 @@ SelectioneBar_t SelectioneBar;
 
 #define MQ2DataLength 128
 uint16_t MQ2Data[MQ2DataLength];
-MQSensor_t MQ2Sensor = {
-    .Data = MQ2Data,
-    .Length = MQ2DataLength,
-};
 
 #define MQ3DataLength 128
 uint16_t MQ3Data[MQ3DataLength];
-MQSensor_t MQ3Sensor = {
-    .Data = MQ3Data,
-    .Length = MQ3DataLength,
-};
 
 #define Threshold Threshold = VoltageToADC(2.048), .Relaxation = VoltageToADC(0.128)
 
@@ -87,6 +79,7 @@ void Application_Init(void)
   TextPage_AddLowerPage(&HomePage, &BackPage);
 
   static TextPage_t MQxPage = TextPage_NavigationPage("MQxPage");
+  MQxPage.ShowCallback = TextPage_ShowMQxPageCallback;
   TextPage_AddLowerPage(&HomePage, &MQxPage);
 
   {
