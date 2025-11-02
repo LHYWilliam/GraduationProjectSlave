@@ -59,6 +59,10 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define BoardKey_Pin GPIO_PIN_0
 #define BoardKey_GPIO_Port GPIOA
+#define LoRaAUX_Pin GPIO_PIN_4
+#define LoRaAUX_GPIO_Port GPIOA
+#define LoRaMD0_Pin GPIO_PIN_5
+#define LoRaMD0_GPIO_Port GPIOA
 #define BoardLED_Pin GPIO_PIN_2
 #define BoardLED_GPIO_Port GPIOB
 #define EncoderKey_Pin GPIO_PIN_15

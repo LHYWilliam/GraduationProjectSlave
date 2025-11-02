@@ -14,19 +14,22 @@ Key_t BoardKey = {
     .ActiveState = GPIO_PIN_SET,
 };
 
+OLED_t OLED = {
+    .hI2Cx = &hi2c1,
+};
+
 Key_t EncoderKey = {
     .GPIOx = EncoderKey_GPIO_Port,
     .Pin = EncoderKey_Pin,
     .ActiveState = GPIO_PIN_RESET,
 };
 
-OLED_t OLED = {
-    .hI2Cx = &hi2c1,
+Encoder_t Encoder = {
+    .hTIMx = &htim1,
 };
 
-Serial_t Serial = {
-    .hUARTx = &huart3,
-};
+TextPage_t *TextPage;
+SelectioneBar_t SelectioneBar;
 
 uint16_t Buffer[2];
 Sampler_t Sampler = {
@@ -36,12 +39,17 @@ Sampler_t Sampler = {
     .Buffer = Buffer,
 };
 
-Encoder_t Encoder = {
-    .hTIMx = &htim1,
+Serial_t Serial = {
+    .hUARTx = &huart3,
 };
 
-TextPage_t *TextPage;
-SelectioneBar_t SelectioneBar;
+LoRa_t LoRa = {
+    .hUARTx = &huart2,
+    .AUX_Port = LoRaAUX_GPIO_Port,
+    .AUX_Pin = LoRaAUX_Pin,
+    .MD0_Port = LoRaMD0_GPIO_Port,
+    .MD0_Pin = LoRaMD0_Pin,
+};
 
 #define MQ2DataLength 128
 uint16_t MQ2Data[MQ2DataLength];
@@ -82,6 +90,18 @@ void Application_Init(void)
   MQxPage.ShowCallback = TextPage_ShowMQxPageCallback;
   TextPage_AddLowerPage(&HomePage, &MQxPage);
 
+  LoRa_ATMode(&LoRa);
+  LoRa_StartIdleIT(&LoRa);
+  LoRa_DisableEcho(&LoRa);
+  LoRa_SetBaudRateParity(&LoRa, LoRaBaudRate115200, LoRaParityNone);
+  LoRa_SetAddress(&LoRa, 0x0000);
+  LoRa_SetChannelWLRate(&LoRa, 23, LoRaWLRate19_2Kbps);
+  LoRa_SetTPower(&LoRa, LoRaTPower20dBm);
+  LoRa_SetWLTime(&LoRa, LoRaWLTime1s);
+  LoRa_SetTMode(&LoRa, LoRaTModeTransparentTransmission);
+  LoRa_SetCWMode(&LoRa, LoRaCWModeNormal);
+  LoRa_CommunicationMode(&LoRa);
+
   {
     static TextPage_t BackPage = TextPage_BackPage("<");
     TextPage_AddLowerPage(&MQxPage, &BackPage);
@@ -120,4 +140,20 @@ void Application_Init(void)
   TextPage_Init(&HomePage, &OLED);
 
   SelectioneBar_BindTextPage(&SelectioneBar, HomePage.HeadPage);
+}
+
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
+{
+  if (huart == LoRa.hUARTx)
+  {
+    LoRa.ReceiveSize = Size;
+
+    if (Size >= 4 && strncmp((char *) &LoRa.ReceiveBuffer[Size - 4], "OK\r\n", 4) == 0)
+    {
+      LoRa.ReceiveOK = SET;
+    } else
+    {
+      LoRa.ReceiveOK = RESET;
+    }
+  }
 }

@@ -1,6 +1,8 @@
 #ifndef __APPLICATION_H__
 #define __APPLICATION_H__
 
+#include <string.h>
+
 #include "cmsis_os.h"
 #include "adc.h"
 #include "dma.h"
@@ -9,26 +11,33 @@
 #include "usart.h"
 #include "gpio.h"
 
-#include "Key.h"
 #include "LED.h"
+#include "Key.h"
+
 #include "OLED.h"
 #include "Menu.h"
-#include "Serial.h"
-#include "Sampler.h"
 #include "Encoder.h"
+
+#include "Sampler.h"
 #include "MQSensor.h"
+
+#include "LoRa.h"
+#include "Serial.h"
 
 extern LED_t BoardLED;
 extern Key_t BoardKey;
-extern Key_t EncoderKey;
-extern OLED_t OLED;
-extern Serial_t Serial;
-extern Sampler_t Sampler;
-extern Encoder_t Encoder;
-extern MQSensor_t MQxSensor[2];
 
+extern OLED_t OLED;
+extern Key_t EncoderKey;
+extern Encoder_t Encoder;
 extern TextPage_t *TextPage;
 extern SelectioneBar_t SelectioneBar;
+
+extern Sampler_t Sampler;
+extern MQSensor_t MQxSensor[2];
+
+extern Serial_t Serial;
+extern LoRa_t LoRa;
 
 void Application_Init(void);
 

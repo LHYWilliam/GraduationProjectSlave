@@ -50,6 +50,9 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, LoRaAUX_Pin|LoRaMD0_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(BoardLED_GPIO_Port, BoardLED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : BoardKey_Pin */
@@ -57,6 +60,13 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(BoardKey_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : LoRaAUX_Pin LoRaMD0_Pin */
+  GPIO_InitStruct.Pin = LoRaAUX_Pin|LoRaMD0_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : BoardLED_Pin */
   GPIO_InitStruct.Pin = BoardLED_Pin;

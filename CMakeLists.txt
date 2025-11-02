@@ -54,6 +54,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 
     ${CMAKE_SOURCE_DIR}/Hardware/Src/Key.c
     ${CMAKE_SOURCE_DIR}/Hardware/Src/LED.c
+    ${CMAKE_SOURCE_DIR}/Hardware/Src/LoRa.c
     ${CMAKE_SOURCE_DIR}/Hardware/Src/Menu.c
     ${CMAKE_SOURCE_DIR}/Hardware/Src/MQSensor.c
     ${CMAKE_SOURCE_DIR}/Hardware/Src/OLED_Font.c
