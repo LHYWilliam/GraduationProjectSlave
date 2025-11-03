@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include <stdio.h>
 
 #include "cmsis_os2.h"
@@ -6,7 +7,7 @@
 
 void LoRa_StartIdleIT(LoRa_t *Self)
 {
-  HAL_UARTEx_ReceiveToIdle_IT(Self->hUARTx, Self->ReceiveBuffer, sizeof(Self->ReceiveBuffer));
+  HAL_UARTEx_ReceiveToIdle_IT(Self->hUARTx, Self->RxBuffer, sizeof(Self->RxBuffer));
 }
 
 void LoRa_ATMode(LoRa_t *Self)
@@ -14,12 +15,15 @@ void LoRa_ATMode(LoRa_t *Self)
   HAL_GPIO_WritePin(Self->AUX_Port, Self->AUX_Pin, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(Self->MD0_Port, Self->MD0_Pin, GPIO_PIN_SET);
   osDelay(100);
+  Self->Mode = LoRaModeAT;
 }
 
 void LoRa_CommunicationMode(LoRa_t *Self)
 {
   HAL_GPIO_WritePin(Self->AUX_Port, Self->AUX_Pin, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(Self->MD0_Port, Self->MD0_Pin, GPIO_PIN_RESET);
+  osDelay(100);
+  Self->Mode = LoRaModeCommunication;
 }
 
 void LoRa_CLearReceive(LoRa_t *Self)
@@ -37,12 +41,11 @@ void LoRa_WaitForOK(LoRa_t *Self)
   LoRa_CLearReceive(Self);
 }
 
-#define LoRa_SendATCommand(Command, ...)                                                                  \
-  do                                                                                                      \
-  {                                                                                                       \
-    uint8_t Length = snprintf((char *) Self->SendBuffer, sizeof(Self->SendBuffer), Command, __VA_ARGS__); \
-    HAL_UART_Transmit(Self->hUARTx, Self->SendBuffer, Length, HAL_MAX_DELAY);                             \
-    LoRa_WaitForOK(Self);                                                                                 \
+#define LoRa_SendATCommand(Command, ...)     \
+  do                                         \
+  {                                          \
+    LoRa_Printf(Self, Command, __VA_ARGS__); \
+    LoRa_WaitForOK(Self);                    \
   } while (0)
 
 void LoRa_EnableEcho(LoRa_t *Self)
@@ -88,4 +91,17 @@ void LoRa_SetTMode(LoRa_t *Self, LoRa_TMode TMode)
 void LoRa_SetCWMode(LoRa_t *Self, LoRa_CWMode CWMode)
 {
   LoRa_SendATCommand("AT+CWMODE=%d\r\n", CWMode);
+}
+
+void LoRa_Printf(LoRa_t *Self, const char *Format, ...)
+{
+  va_list Args;
+  va_start(Args, Format);
+  int32_t Length = vsnprintf((char *) Self->TxBuffer, sizeof(Self->TxBuffer), Format, Args);
+  va_end(Args);
+
+  if (Length > 0)
+  {
+    HAL_UART_Transmit(Self->hUARTx, Self->TxBuffer, Length, HAL_MAX_DELAY);
+  }
 }

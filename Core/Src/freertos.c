@@ -68,6 +68,11 @@ osTimerId_t LEDTimerHandle;
 const osTimerAttr_t LEDTimer_attributes = {
   .name = "LEDTimer"
 };
+/* Definitions for LoRaTimer */
+osTimerId_t LoRaTimerHandle;
+const osTimerAttr_t LoRaTimer_attributes = {
+  .name = "LoRaTimer"
+};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -80,7 +85,8 @@ void Encoder_Test(void);
 
 void OLEDFlushTaskCode(void *argument);
 void OLEDInteractionTaskCode(void *argument);
-void LEDTimerCode(void *argument);
+void LEDTimerCallback(void *argument);
+void LoRaTimerCallback(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -104,12 +110,16 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the timer(s) */
   /* creation of LEDTimer */
-  LEDTimerHandle = osTimerNew(LEDTimerCode, osTimerPeriodic, NULL, &LEDTimer_attributes);
+  LEDTimerHandle = osTimerNew(LEDTimerCallback, osTimerPeriodic, NULL, &LEDTimer_attributes);
+
+  /* creation of LoRaTimer */
+  LoRaTimerHandle = osTimerNew(LoRaTimerCallback, osTimerPeriodic, NULL, &LoRaTimer_attributes);
 
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
 
   osTimerStart(LEDTimerHandle, 100);
+  osTimerStart(LoRaTimerHandle, 1000);
 
   /* USER CODE END RTOS_TIMERS */
 
@@ -150,8 +160,12 @@ void OLEDFlushTaskCode(void *argument)
   Application_Init();
 
   /* Infinite loop */
+  // uint32_t Tick = osKernelGetTickCount();
   for (;;)
   {
+    // LoRa_Printf(&LoRa, "%d\r\n", osKernelGetTickCount() - Tick);
+    // Tick = osKernelGetTickCount();
+
     OLED_ClearBuffer(&OLED);
 
     TextPage->UpdateCallback(TextPage, &OLED);
@@ -206,19 +220,37 @@ void OLEDInteractionTaskCode(void *argument)
   /* USER CODE END OLEDInteractionTaskCode */
 }
 
-/* LEDTimerCode function */
-void LEDTimerCode(void *argument)
+/* LEDTimerCallback function */
+void LEDTimerCallback(void *argument)
 {
-  /* USER CODE BEGIN LEDTimerCode */
+  /* USER CODE BEGIN LEDTimerCallback */
 
   UNUSED(argument);
 
   LED_Toggle(&BoardLED);
 
-  // float Voltage1 = Sampler.Buffer[0] * 3.3 / 4095., Voltage2 = Sampler.Buffer[1] * 3.3 / 4095.;
-  // Serial_Printf(&Serial, "[%.3f %.3f]\r\n", Voltage1, Voltage2);
+  /* USER CODE END LEDTimerCallback */
+}
 
-  /* USER CODE END LEDTimerCode */
+/* LoRaTimerCallback function */
+void LoRaTimerCallback(void *argument)
+{
+  /* USER CODE BEGIN LoRaTimerCallback */
+
+  UNUSED(argument);
+
+  if (LoRa.Mode != LoRaModeCommunication)
+  {
+    return;
+  }
+
+  LoRa_Printf(
+      &LoRa,
+      "MQ2: [%.3f] | MQ3: [%.3f]\r\n",
+      ADCToVoltage(MQSensor_GetData(&MQxSensor[0])),
+      ADCToVoltage(MQSensor_GetData(&MQxSensor[1])));
+
+  /* USER CODE END LoRaTimerCallback */
 }
 
 /* Private application code --------------------------------------------------*/

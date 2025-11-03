@@ -148,7 +148,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
   {
     LoRa.ReceiveSize = Size;
 
-    if (Size >= 4 && strncmp((char *) &LoRa.ReceiveBuffer[Size - 4], "OK\r\n", 4) == 0)
+    if (Size >= 4 && strncmp((char *) &LoRa.RxBuffer[Size - 4], "OK\r\n", 4) == 0)
     {
       LoRa.ReceiveOK = SET;
     } else

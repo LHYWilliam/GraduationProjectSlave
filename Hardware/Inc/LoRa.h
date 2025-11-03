@@ -61,6 +61,12 @@ typedef enum
   LoRaCWModeSignalEnhancement,
 } LoRa_CWMode;
 
+typedef enum
+{
+  LoRaModeAT,
+  LoRaModeCommunication,
+} LoRa_Mode;
+
 typedef struct
 {
   UART_HandleTypeDef *hUARTx;
@@ -69,11 +75,12 @@ typedef struct
   GPIO_TypeDef *MD0_Port;
   uint32_t MD0_Pin;
 
-  uint8_t SendBuffer[128];
+  LoRa_Mode Mode;
 
   uint8_t ReceiveSize;
-  uint8_t ReceiveBuffer[128];
   FlagStatus ReceiveOK;
+  uint8_t RxBuffer[128];
+  uint8_t TxBuffer[128];
 } LoRa_t;
 
 void LoRa_StartIdleIT(LoRa_t *Self);
@@ -91,5 +98,7 @@ void LoRa_SetTPower(LoRa_t *Self, LoRa_TPower TPower);
 void LoRa_SetWLTime(LoRa_t *Self, LoRa_WLTime WLTime);
 void LoRa_SetTMode(LoRa_t *Self, LoRa_TMode TMode);
 void LoRa_SetCWMode(LoRa_t *Self, LoRa_CWMode CWMode);
+
+void LoRa_Printf(LoRa_t *Self, const char *Format, ...);
 
 #endif
