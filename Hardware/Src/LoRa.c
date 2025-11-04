@@ -95,28 +95,66 @@ void LoRa_CLearReceive(LoRa_t *Self)
   Self->ReceiveOK = RESET;
 }
 
-void LoRa_WaitForOK(LoRa_t *Self)
+ErrorStatus LoRa_WaitForOK(LoRa_t *Self)
 {
+  uint32_t Tick = osKernelGetTickCount();
+
   while (Self->ReceiveOK != SET)
   {
+    if (osKernelGetTickCount() - Tick > 1000)
+    {
+      LoRa_CLearReceive(Self);
+
+      return ERROR;
+    }
+
     osDelay(1);
   }
+
   LoRa_CLearReceive(Self);
+
+  return SUCCESS;
 }
 
 #define LoRa_SendATCommandWithArgs(Self, Command, ...) \
   do                                                   \
   {                                                    \
-    LoRa_Printf(Self, Command, __VA_ARGS__);           \
-    LoRa_WaitForOK(Self);                              \
+    uint8_t RetryCount = 0;                            \
+    ErrorStatus Status = ERROR;                        \
+    while (Status == ERROR)                            \
+    {                                                  \
+      LoRa_Printf(Self, Command, __VA_ARGS__);         \
+      Status = LoRa_WaitForOK(Self);                   \
+      if (RetryCount >= 10)                            \
+      {                                                \
+        LoRa_CLearReceive(Self);                       \
+        Status = ERROR;                                \
+        break;                                         \
+      }                                                \
+      RetryCount++;                                    \
+    }                                                  \
   } while (0)
 
-#define LoRa_SendATCommand(Self, Command) \
-  do                                      \
-  {                                       \
-    LoRa_Printf(Self, Command);           \
-    LoRa_WaitForOK(Self);                 \
-  } while (0)
+ErrorStatus LoRa_SendATCommand(LoRa_t *Self, const char *Command)
+{
+  uint8_t RetryCount = 0;
+  ErrorStatus Status = ERROR;
+  while (Status == ERROR)
+  {
+    LoRa_Printf(Self, Command);
+    Status = LoRa_WaitForOK(Self);
+
+    if (RetryCount >= 10)
+    {
+      Status = ERROR;
+      break;
+    }
+    RetryCount++;
+  }
+
+  return Status;
+}
+
 
 void LoRa_EnableEcho(LoRa_t *Self)
 {
@@ -130,20 +168,34 @@ void LoRa_DisableEcho(LoRa_t *Self)
 
 LoRa_BaudRate LoRa_ReadBaudRate(LoRa_t *Self)
 {
-  LoRa_SendATCommand(Self, "AT+UART?\r\n");
+  ErrorStatus Status = LoRa_SendATCommand(Self, "AT+UART?\r\n");
 
-  uint8_t BaudRate = Self->RxBuffer[6] - '0';
-  // sscanf((char *) Self->RxBuffer, "+UART:%hhu,%hhu\r\n", &BaudRate, &Parity);
+  uint8_t BaudRate;
+  if (Status == SUCCESS)
+  {
+    BaudRate = Self->RxBuffer[6] - '0';
+    // sscanf((char *) Self->RxBuffer, "+UART:%hhu,%hhu\r\n", &BaudRate, &Parity);
+  } else
+  {
+    BaudRate = Self->Config.BaudRate;
+  }
 
   return (LoRa_BaudRate) BaudRate;
 }
 
 LoRa_Parity LoRa_ReadParity(LoRa_t *Self)
 {
-  LoRa_SendATCommand(Self, "AT+UART?\r\n");
+  ErrorStatus Status = LoRa_SendATCommand(Self, "AT+UART?\r\n");
 
-  uint8_t Parity = Self->RxBuffer[8] - '0';
-  // sscanf((char *) Self->RxBuffer, "+UART:%hhu,%hhu\r\n", &BaudRate, &Parity);
+  uint8_t Parity;
+  if (Status == SUCCESS)
+  {
+    Parity = Self->RxBuffer[8] - '0';
+    // sscanf((char *) Self->RxBuffer, "+UART:%hhu,%hhu\r\n", &BaudRate, &Parity);
+  } else
+  {
+    Parity = Self->Config.Parity;
+  }
 
   return (LoRa_Parity) Parity;
 }
@@ -181,87 +233,133 @@ uint8_t Hex2Dec(const char *Hex)
 
 uint16_t LoRa_ReadAddress(LoRa_t *Self)
 {
-  LoRa_SendATCommand(Self, "AT+ADDR?\r\n");
+  ErrorStatus Status = LoRa_SendATCommand(Self, "AT+ADDR?\r\n");
 
-  uint8_t High = Hex2Dec((char *) &Self->RxBuffer[6]);
-  uint8_t Low = Hex2Dec((char *) &Self->RxBuffer[9]);
-  // sscanf((char *) Self->RxBuffer, "+ADDR:%2hhX,%2hhX\r\n", &High, &Low);
+  uint16_t Address;
+  if (Status == SUCCESS)
+  {
+    uint8_t High = Hex2Dec((char *) &Self->RxBuffer[6]);
+    uint8_t Low = Hex2Dec((char *) &Self->RxBuffer[9]);
+    // sscanf((char *) Self->RxBuffer, "+ADDR:%2hhX,%2hhX\r\n", &High, &Low);
+    Address = High << 8 | Low;
+  } else
+  {
+    Address = Self->Config.Address;
+  }
 
-  return High << 8 | Low;
+  return Address;
 }
 
 uint8_t LoRa_ReadChannel(LoRa_t *Self)
 {
-  LoRa_SendATCommand(Self, "AT+WLRATE?\r\n");
+  ErrorStatus Status = LoRa_SendATCommand(Self, "AT+WLRATE?\r\n");
 
   uint8_t Channel = 0;
-
-  if (Self->RxBuffer[9] == ',')
+  if (Status == SUCCESS)
   {
-    Channel = Self->RxBuffer[8] - '0';
-  } else if (Self->RxBuffer[10] == ',')
+    if (Self->RxBuffer[9] == ',')
+    {
+      Channel = Self->RxBuffer[8] - '0';
+    } else if (Self->RxBuffer[10] == ',')
+    {
+      Channel = (Self->RxBuffer[8] - '0') * 10 + (Self->RxBuffer[9] - '0');
+    }
+    // sscanf((char *) Self->RxBuffer, "+WLRATE:%hhu,%hhu\r\n", &Channel, &WLRate);
+  } else
   {
-    Channel = (Self->RxBuffer[8] - '0') * 10 + (Self->RxBuffer[9] - '0');
+    Channel = Self->Config.Channel;
   }
-  // sscanf((char *) Self->RxBuffer, "+WLRATE:%hhu,%hhu\r\n", &Channel, &WLRate);
 
   return Channel;
 }
 
 LoRa_WLRate LoRa_ReadWLRate(LoRa_t *Self)
 {
-  LoRa_SendATCommand(Self, "AT+WLRATE?\r\n");
+  ErrorStatus Status = LoRa_SendATCommand(Self, "AT+WLRATE?\r\n");
 
   uint8_t WLRate = 0;
-
-  if (Self->RxBuffer[9] == ',')
+  if (Status == SUCCESS)
   {
-    WLRate = Self->RxBuffer[10] - '0';
-  } else if (Self->RxBuffer[10] == ',')
+    if (Self->RxBuffer[9] == ',')
+    {
+      WLRate = Self->RxBuffer[10] - '0';
+    } else if (Self->RxBuffer[10] == ',')
+    {
+      WLRate = Self->RxBuffer[11] - '0';
+    }
+    // sscanf((char *) Self->RxBuffer, "+WLRATE:%hhu,%hhu\r\n", &Channel, &WLRate);
+  } else
   {
-    WLRate = Self->RxBuffer[11] - '0';
+    WLRate = Self->Config.WLRate;
   }
-  // sscanf((char *) Self->RxBuffer, "+WLRATE:%hhu,%hhu\r\n", &Channel, &WLRate);
 
   return (LoRa_WLRate) WLRate;
 }
 
 LoRa_TPower LoRa_ReadTPower(LoRa_t *Self)
 {
-  LoRa_SendATCommand(Self, "AT+TPOWER?\r\n");
+  ErrorStatus Status = LoRa_SendATCommand(Self, "AT+TPOWER?\r\n");
 
-  uint8_t TPower = Self->RxBuffer[8] - '0';
-  // sscanf((char *) Self->RxBuffer, "+TPOWER:%hhu\r\n", &TPower);
+  uint8_t TPower;
+  if (Status == SUCCESS)
+  {
+    TPower = Self->RxBuffer[8] - '0';
+    // sscanf((char *) Self->RxBuffer, "+TPOWER:%hhu\r\n", &TPower);
+  } else
+  {
+    TPower = Self->Config.TPower;
+  }
 
   return (LoRa_TPower) TPower;
 }
 
 LoRa_WLTime LoRa_ReadWLTime(LoRa_t *Self)
 {
-  LoRa_SendATCommand(Self, "AT+WLTIME?\r\n");
+  ErrorStatus Status = LoRa_SendATCommand(Self, "AT+WLTIME?\r\n");
 
-  uint8_t WLTime = Self->RxBuffer[8] - '0';
-  // sscanf((char *) Self->RxBuffer, "+WLTIME:%hhu\r\n", &WLTime);
+  uint8_t WLTime;
+  if (Status == SUCCESS)
+  {
+    WLTime = Self->RxBuffer[8] - '0';
+    // sscanf((char *) Self->RxBuffer, "+WLTIME:%hhu\r\n", &WLTime);
+  } else
+  {
+    WLTime = Self->Config.WLTime;
+  }
 
   return (LoRa_WLTime) WLTime;
 }
 
 LoRa_TMode LoRa_ReadTMode(LoRa_t *Self)
 {
-  LoRa_SendATCommand(Self, "AT+TMODE?\r\n");
+  ErrorStatus Status = LoRa_SendATCommand(Self, "AT+TMODE?\r\n");
 
-  uint8_t TMode = Self->RxBuffer[7] - '0';
-  // sscanf((char *) Self->RxBuffer, "+TMODE:%hhu\r\n", &TMode);
+  uint8_t TMode;
+  if (Status == SUCCESS)
+  {
+    TMode = Self->RxBuffer[7] - '0';
+    // sscanf((char *) Self->RxBuffer, "+TMODE:%hhu\r\n", &TMode);
+  } else
+  {
+    TMode = Self->Config.TMode;
+  }
 
   return (LoRa_TMode) TMode;
 }
 
 LoRa_CWMode LoRa_ReadCWMode(LoRa_t *Self)
 {
-  LoRa_SendATCommand(Self, "AT+CWMODE?\r\n");
+  ErrorStatus Status = LoRa_SendATCommand(Self, "AT+CWMODE?\r\n");
 
-  uint8_t CWMode = Self->RxBuffer[8] - '0';
-  // sscanf((char *) Self->RxBuffer, "+CWMODE:%hhu\r\n", &CWMode);
+  uint8_t CWMode;
+  if (Status == SUCCESS)
+  {
+    CWMode = Self->RxBuffer[8] - '0';
+    // sscanf((char *) Self->RxBuffer, "+CWMODE:%hhu\r\n", &CWMode);
+  } else
+  {
+    CWMode = Self->Config.CWMode;
+  }
 
   return (LoRa_CWMode) CWMode;
 }

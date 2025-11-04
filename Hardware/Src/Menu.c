@@ -21,7 +21,7 @@ void EmptyCallbackRotation(struct TextPage *TextPage, SelectioneBar_t *Selection
 
 void TextPage_Init(TextPage_t *TextPage, OLED_t *OLED)
 {
-  if (TextPage->TitleX == 0 && TextPage->TitleWidth == 0 && TextPage->TitleHeight == 0)
+  if (TextPage->TitleX == 0 && TextPage->TitleY == 0 && TextPage->TitleWidth == 0 && TextPage->TitleHeight == 0)
   {
     TextPage->TitleWidth = strlen(TextPage->Title) * OLED->FontWidth;
     TextPage->TitleX = OLED->Width / 2 - TextPage->TitleWidth / 2;
@@ -50,12 +50,15 @@ void TextPage_Init(TextPage_t *TextPage, OLED_t *OLED)
     Page->Width = strlen(Page->Title) * OLED->FontWidth;
     Page->Height = OLED->FontHeight;
 
-    if (Page->Index == 0)
+    if (Page->UpperPage == NULL)
     {
-      Page->UpperPage = TextPage->UpperPage;
-    } else
-    {
-      Page->UpperPage = TextPage;
+      if (Page->Index == 0)
+      {
+        Page->UpperPage = TextPage->UpperPage;
+      } else
+      {
+        Page->UpperPage = TextPage;
+      }
     }
 
     TextPage_Init(Page, OLED);

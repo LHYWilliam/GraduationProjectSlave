@@ -68,3 +68,24 @@ void TextPage_ShowOptionPageCallback(TextPage_t *TextPage, OLED_t *OLED)
         }
       });
 }
+
+void TextPage_ShowDialogCallback(TextPage_t *TextPage, OLED_t *OLED)
+{
+  TextPage->UpperPage->ShowCallback(TextPage->UpperPage, OLED);
+
+  OLED_ClearBufferArea(OLED, TextPage->TitleX, TextPage->TitleY, TextPage->TitleWidth, TextPage->TitleHeight);
+  OLED_DrawHollowRectangle(OLED, TextPage->TitleX, TextPage->TitleY, TextPage->TitleWidth, TextPage->TitleHeight, 1);
+
+  for (TextPage_t *Page = TextPage->HeadPage; Page != NULL; Page = Page->DownPage)
+  {
+    if (Page->X < TextPage->TitleX || Page->Y < TextPage->TitleY ||
+        Page->X + Page->Width > TextPage->TitleX + TextPage->TitleWidth ||
+        Page->Y + Page->Height > TextPage->TitleY + TextPage->TitleHeight)
+    {
+      continue;
+    }
+
+    OLED_Printf(OLED, Page->X, Page->Y, Page->Title);
+    OLED_DrawHollowRectangle(OLED, Page->X - 2, Page->Y - 2, Page->Width + 4, Page->Height + 4, 1);
+  }
+}

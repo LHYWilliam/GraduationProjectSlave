@@ -29,3 +29,21 @@ void TextPage_ChooseOptionCallback(TextPage_t **TextPage, SelectioneBar_t *Selec
     *(Page->IntParameterPtr) = Page->LowerPages->Index;
   }
 }
+
+void TextPage_LoRaSettingApplyCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar)
+{
+  LoRa_ATMode(&LoRa);
+  LoRa_LoadConfigFromArray(&LoRa, LoRa.ConfigArray);
+  LoRa_CommunicationMode(&LoRa);
+
+  TextPage_EnterCallback(TextPage, SelectioneBar);
+}
+
+void TextPage_LoRaSettingReadCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar)
+{
+  LoRa_ATMode(&LoRa);
+  LoRa_ReadConfig(&LoRa);
+  LoRa_CommunicationMode(&LoRa);
+
+  TextPage_EnterCallback(TextPage, SelectioneBar);
+}

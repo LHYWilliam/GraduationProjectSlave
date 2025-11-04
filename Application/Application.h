@@ -45,10 +45,17 @@ void TextPage_ShowCallback(TextPage_t *TextPage, OLED_t *OLED);
 void TextPage_ShowMQxPageCallback(TextPage_t *TextPage, OLED_t *OLED);
 void TextPage_ShowMQPageCallback(TextPage_t *TextPage, OLED_t *OLED);
 void TextPage_ShowOptionPageCallback(TextPage_t *TextPage, OLED_t *OLED);
+void TextPage_ShowDialogCallback(TextPage_t *TextPage, OLED_t *OLED);
+
 void TextPage_UpdateCallback(TextPage_t *TextPage, OLED_t *OLED);
+void TextPage_UpdateDialogCallback(TextPage_t *TextPage, OLED_t *OLED);
+
 void TextPage_BackCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar);
 void TextPage_EnterCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar);
 void TextPage_ChooseOptionCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar);
+void TextPage_LoRaSettingApplyCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar);
+void TextPage_LoRaSettingReadCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar);
+
 void TextPage_CursorCallback(TextPage_t *TextPage, SelectioneBar_t *SelectioneBar, RotationDirection Direction);
 
 #define ShowTitleAndTexts(...)                                                          \
@@ -126,6 +133,17 @@ void TextPage_CursorCallback(TextPage_t *TextPage, SelectioneBar_t *SelectioneBa
     static TextPage_t OptionPage = TextPage_OptionPage(Option); \
     TextPage_AddLowerPage(UpperPage, &OptionPage);              \
   } while (0)
+
+#define TextPage_DialogPage(title)                     \
+  {                                                    \
+      .Title = title,                                  \
+      .TitleX = OLED.Width / 2,                        \
+      .TitleY = OLED.Height / 2,                       \
+      .ShowCallback = TextPage_ShowDialogCallback,     \
+      .UpdateCallback = TextPage_UpdateDialogCallback, \
+      .ClickCallback = TextPage_EnterCallback,         \
+      .RotationCallback = TextPage_CursorCallback,     \
+  }
 
 #define ADCToVoltage(ADC) ((float) (ADC) * 3.3 / 4095.0)
 #define VoltageToADC(Voltage) ((uint16_t) ((Voltage) / 3.3 * 4095.0))
