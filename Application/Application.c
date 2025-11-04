@@ -39,18 +39,6 @@ Sampler_t Sampler = {
     .Buffer = Buffer,
 };
 
-Serial_t Serial = {
-    .hUARTx = &huart3,
-};
-
-LoRa_t LoRa = {
-    .hUARTx = &huart2,
-    .AUX_Port = LoRaAUX_GPIO_Port,
-    .AUX_Pin = LoRaAUX_Pin,
-    .MD0_Port = LoRaMD0_GPIO_Port,
-    .MD0_Pin = LoRaMD0_Pin,
-};
-
 #define MQ2DataLength 128
 uint16_t MQ2Data[MQ2DataLength];
 
@@ -72,13 +60,41 @@ MQSensor_t MQxSensor[2] = {
     },
 };
 
+Serial_t Serial = {
+    .hUARTx = &huart3,
+};
+
+LoRa_t LoRa = {
+    .hUARTx = &huart2,
+    .AUX_Port = LoRaAUX_GPIO_Port,
+    .AUX_Pin = LoRaAUX_Pin,
+    .MD0_Port = LoRaMD0_GPIO_Port,
+    .MD0_Pin = LoRaMD0_Pin,
+    .Config = {
+        .BaudRate = LoRaBaudRate115200,
+        .Parity = LoRaParityNone,
+        .Address = 0x0000,
+        .Channel = 23,
+        .WLRate = LoRaWLRate19_2Kbps,
+        .TPower = LoRaTPower20dBm,
+        .WLTime = LoRaWLTime1s,
+        .TMode = LoRaTModeTransparentTransmission,
+        .CWMode = LoRaCWModeNormal,
+    },
+};
 
 void Application_Init(void)
 {
+  OLED_Init(&OLED);
   Encoder_Start(&Encoder);
+
   Sampler_Start_DMA_TIM_IT(&Sampler);
 
-  OLED_Init(&OLED);
+  LoRa_StartIdleIT(&LoRa);
+  LoRa_ATMode(&LoRa);
+  // LoRa_ApplyConfig(&LoRa, &LoRa.Config);
+  LoRa_ReadConfig(&LoRa);
+  LoRa_CommunicationMode(&LoRa);
 
   static TextPage_t HomePage = TextPage_NavigationPage("Home");
   TextPage = &HomePage;
@@ -89,18 +105,6 @@ void Application_Init(void)
   static TextPage_t MQxPage = TextPage_NavigationPage("MQxPage");
   MQxPage.ShowCallback = TextPage_ShowMQxPageCallback;
   TextPage_AddLowerPage(&HomePage, &MQxPage);
-
-  LoRa_ATMode(&LoRa);
-  LoRa_StartIdleIT(&LoRa);
-  LoRa_DisableEcho(&LoRa);
-  LoRa_SetBaudRateParity(&LoRa, LoRaBaudRate115200, LoRaParityNone);
-  LoRa_SetAddress(&LoRa, 0x0000);
-  LoRa_SetChannelWLRate(&LoRa, 23, LoRaWLRate19_2Kbps);
-  LoRa_SetTPower(&LoRa, LoRaTPower20dBm);
-  LoRa_SetWLTime(&LoRa, LoRaWLTime1s);
-  LoRa_SetTMode(&LoRa, LoRaTModeTransparentTransmission);
-  LoRa_SetCWMode(&LoRa, LoRaCWModeNormal);
-  LoRa_CommunicationMode(&LoRa);
 
   {
     static TextPage_t BackPage = TextPage_BackPage("<");
@@ -146,14 +150,18 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
   if (huart == LoRa.hUARTx)
   {
-    LoRa.ReceiveSize = Size;
+    LoRa.ReceiveSize += Size;
 
-    if (Size >= 4 && strncmp((char *) &LoRa.RxBuffer[Size - 4], "OK\r\n", 4) == 0)
+    if (LoRa.Mode == LoRaModeAT)
     {
-      LoRa.ReceiveOK = SET;
-    } else
-    {
-      LoRa.ReceiveOK = RESET;
+      if (LoRa.ReceiveSize >= 4 && strncmp((char *) &LoRa.RxBuffer[LoRa.ReceiveSize - 4], "OK\r\n", 4) == 0)
+      {
+        LoRa.RxBuffer[LoRa.ReceiveSize] = '\0';
+        LoRa.ReceiveOK = SET;
+      } else
+      {
+        LoRa.ReceiveOK = RESET;
+      }
     }
   }
 }

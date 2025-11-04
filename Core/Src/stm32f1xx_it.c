@@ -248,7 +248,19 @@ void USART2_IRQHandler(void)
   HAL_UART_IRQHandler(&huart2);
   /* USER CODE BEGIN USART2_IRQn 1 */
 
-  HAL_UARTEx_ReceiveToIdle_IT(LoRa.hUARTx, LoRa.RxBuffer, sizeof(LoRa.RxBuffer));
+  if (LoRa.Mode == LoRaModeAT)
+  {
+    if (LoRa.ReceiveOK == SET)
+    {
+      HAL_UARTEx_ReceiveToIdle_IT(LoRa.hUARTx, LoRa.RxBuffer, sizeof(LoRa.RxBuffer));
+    } else
+    {
+      HAL_UARTEx_ReceiveToIdle_IT(LoRa.hUARTx, LoRa.RxBuffer + LoRa.ReceiveSize, sizeof(LoRa.RxBuffer) - LoRa.ReceiveSize);
+    }
+  } else
+  {
+    HAL_UARTEx_ReceiveToIdle_IT(LoRa.hUARTx, LoRa.RxBuffer, sizeof(LoRa.RxBuffer));
+  }
 
   /* USER CODE END USART2_IRQn 1 */
 }
