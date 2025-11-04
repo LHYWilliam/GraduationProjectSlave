@@ -5,9 +5,13 @@
 
 #include "OLED.h"
 
-#define PositionUpdate(Now, Target, Step)                       \
-  ((Now) += ((Now) < (Target) ? Step : (Now) > (Target) ? -Step \
-                                                        : 0))
+/*
+// #define PositionUpdate(Now, Target, Step)                       \
+//   ((Now) += ((Now) < (Target) ? Step : (Now) > (Target) ? -Step \
+//                                                         : 0))
+*/
+
+#define PositionUpdate(Now, Target, Step) ((Now) = (Target))
 
 typedef enum
 {

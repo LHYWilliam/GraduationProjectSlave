@@ -44,9 +44,11 @@ void Application_Init(void);
 void TextPage_ShowCallback(TextPage_t *TextPage, OLED_t *OLED);
 void TextPage_ShowMQxPageCallback(TextPage_t *TextPage, OLED_t *OLED);
 void TextPage_ShowMQPageCallback(TextPage_t *TextPage, OLED_t *OLED);
+void TextPage_ShowOptionPageCallback(TextPage_t *TextPage, OLED_t *OLED);
 void TextPage_UpdateCallback(TextPage_t *TextPage, OLED_t *OLED);
 void TextPage_BackCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar);
 void TextPage_EnterCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar);
+void TextPage_ChooseOptionCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar);
 void TextPage_CursorCallback(TextPage_t *TextPage, SelectioneBar_t *SelectioneBar, RotationDirection Direction);
 
 #define ShowTitleAndTexts(...)                                                          \
@@ -100,6 +102,30 @@ void TextPage_CursorCallback(TextPage_t *TextPage, SelectioneBar_t *SelectioneBa
       .TitleWidth = OLED.Width,       \
       .TitleHeight = OLED.Height / 2, \
   }
+
+#define TextPage_OptionGroupPage(title, Type, Ptr) \
+  {                                                \
+      .Title = title,                              \
+      .ShowCallback = TextPage_ShowCallback,       \
+      .UpdateCallback = TextPage_UpdateCallback,   \
+      .ClickCallback = TextPage_EnterCallback,     \
+      .RotationCallback = TextPage_CursorCallback, \
+      .Type = Ptr,                                 \
+  }
+
+#define TextPage_OptionPage(title)                    \
+  {                                                   \
+      .Title = title,                                 \
+      .ClickCallback = TextPage_ChooseOptionCallback, \
+      .RotationCallback = TextPage_CursorCallback,    \
+  }
+
+#define TextPage_AddOption(UpperPage, Option)                   \
+  do                                                            \
+  {                                                             \
+    static TextPage_t OptionPage = TextPage_OptionPage(Option); \
+    TextPage_AddLowerPage(UpperPage, &OptionPage);              \
+  } while (0)
 
 #define ADCToVoltage(ADC) ((float) (ADC) * 3.3 / 4095.0)
 #define VoltageToADC(Voltage) ((uint16_t) ((Voltage) / 3.3 * 4095.0))

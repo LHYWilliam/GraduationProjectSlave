@@ -103,6 +103,7 @@ typedef struct
   uint8_t TxBuffer[128];
 
   LoRaConfig_t Config;
+  int32_t ConfigArray[9];
 } LoRa_t;
 
 void LoRa_StartIdleIT(LoRa_t *Self);
@@ -111,25 +112,9 @@ void LoRa_Printf(LoRa_t *Self, const char *Format, ...);
 void LoRa_ATMode(LoRa_t *Self);
 void LoRa_CommunicationMode(LoRa_t *Self);
 
-void LoRa_EnableEcho(LoRa_t *Self);
-void LoRa_DisableEcho(LoRa_t *Self);
-
-void LoRa_ApplyConfig(LoRa_t *Self, LoRaConfig_t *Config);
-void LoRa_SetBaudRateParity(LoRa_t *Self, LoRa_BaudRate BaudRate, LoRa_Parity Parity);
-void LoRa_SetAddress(LoRa_t *Self, uint16_t Address);
-void LoRa_SetChannelWLRate(LoRa_t *Self, uint8_t Channel, LoRa_WLRate WLRate);
-void LoRa_SetTPower(LoRa_t *Self, LoRa_TPower TPower);
-void LoRa_SetWLTime(LoRa_t *Self, LoRa_WLTime WLTime);
-void LoRa_SetTMode(LoRa_t *Self, LoRa_TMode TMode);
-void LoRa_SetCWMode(LoRa_t *Self, LoRa_CWMode CWMode);
-
 LoRaConfig_t *LoRa_ReadConfig(LoRa_t *Self);
-void LoRa_ReadBaudRateParity(LoRa_t *Self);
-void LoRa_ReadAddress(LoRa_t *Self);
-void LoRa_ReadChannelWLRate(LoRa_t *Self);
-void LoRa_ReadTPower(LoRa_t *Self);
-void LoRa_ReadWLTime(LoRa_t *Self);
-void LoRa_ReadTMode(LoRa_t *Self);
-void LoRa_ReadCWMode(LoRa_t *Self);
+void LoRa_ApplyConfig(LoRa_t *Self, LoRaConfig_t *Config);
+void LoRa_LoadConfigFromArray(LoRa_t *Self, int32_t *ConfigArray);
+void LoRa_DumpConfigToArray(LoRa_t *Self, int32_t *ConfigArray);
 
 #endif

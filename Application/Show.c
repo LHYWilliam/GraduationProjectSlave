@@ -54,3 +54,17 @@ void TextPage_ShowMQPageCallback(TextPage_t *TextPage, OLED_t *OLED)
       Page->TitleWidth,
       2);
 }
+
+void TextPage_ShowOptionPageCallback(TextPage_t *TextPage, OLED_t *OLED)
+{
+  ShowTitleAndTexts(
+      OLED_Printf(OLED, Page->X, Page->Y, Page->Title);
+
+      if (Page->Index > 0) {
+        OLED_DrawHollowRectangle(OLED, OLED->Width - 16, Page->Y, 8, 8, 1);
+        if (*TextPage->IntParameterPtr == Page->Index)
+        {
+          OLED_DrawSolidRectangle(OLED, OLED->Width - 16 + 2, Page->Y + 2, 4, 4);
+        }
+      });
+}
