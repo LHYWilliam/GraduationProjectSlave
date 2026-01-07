@@ -110,14 +110,14 @@ void TextPage_CursorCallback(TextPage_t *TextPage, SelectioneBar_t *SelectioneBa
       .TitleHeight = OLED.Height / 2, \
   }
 
-#define TextPage_OptionGroupPage(title, Type, Ptr) \
+#define TextPage_OptionGroupPage(title, Ptr)       \
   {                                                \
       .Title = title,                              \
       .ShowCallback = TextPage_ShowCallback,       \
       .UpdateCallback = TextPage_UpdateCallback,   \
       .ClickCallback = TextPage_EnterCallback,     \
       .RotationCallback = TextPage_CursorCallback, \
-      .Type = Ptr,                                 \
+      .IntParameterPtr = Ptr,                      \
   }
 
 #define TextPage_OptionPage(title)                    \
@@ -126,6 +126,19 @@ void TextPage_CursorCallback(TextPage_t *TextPage, SelectioneBar_t *SelectioneBa
       .ClickCallback = TextPage_ChooseOptionCallback, \
       .RotationCallback = TextPage_CursorCallback,    \
   }
+
+#define TextPage_AddBackPage(Page)                       \
+  do                                                     \
+  {                                                      \
+    static TextPage_t BackPage = TextPage_BackPage("<"); \
+    TextPage_AddLowerPage(Page, &BackPage);              \
+  } while (0)
+
+#define TextPage_AddOptionGroup(UpperPage, OptionGroup, Title, Ptr)     \
+  static TextPage_t OptionGroup = TextPage_OptionGroupPage(Title, Ptr); \
+  OptionGroup.ShowCallback = TextPage_ShowOptionPageCallback;           \
+  TextPage_AddLowerPage(UpperPage, &OptionGroup);
+
 
 #define TextPage_AddOption(UpperPage, Option)                   \
   do                                                            \

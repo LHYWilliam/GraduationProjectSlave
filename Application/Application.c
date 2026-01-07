@@ -99,16 +99,14 @@ void Application_Init(void)
   static TextPage_t HomePage = TextPage_NavigationPage("Home");
   TextPage = &HomePage;
 
-  static TextPage_t BackPage = TextPage_BackPage("<");
-  TextPage_AddLowerPage(&HomePage, &BackPage);
+  TextPage_AddBackPage(&HomePage);
 
   static TextPage_t MQxSensorPage = TextPage_NavigationPage("MQxSensor");
   MQxSensorPage.ShowCallback = TextPage_ShowMQxPageCallback;
   TextPage_AddLowerPage(&HomePage, &MQxSensorPage);
 
   {
-    static TextPage_t BackPage = TextPage_BackPage("<");
-    TextPage_AddLowerPage(&MQxSensorPage, &BackPage);
+    TextPage_AddBackPage(&MQxSensorPage);
 
     {
       static TextPage_t MQ2Page = TextPage_MQxPage("MQ2");
@@ -145,15 +143,13 @@ void Application_Init(void)
   TextPage_AddLowerPage(&HomePage, &SettingPage);
 
   {
-    static TextPage_t BackPage = TextPage_BackPage("<");
-    TextPage_AddLowerPage(&SettingPage, &BackPage);
+    TextPage_AddBackPage(&SettingPage);
 
     static TextPage_t LoRaPage = TextPage_NavigationPage("LoRa");
     TextPage_AddLowerPage(&SettingPage, &LoRaPage);
 
     {
-      static TextPage_t BackPage = TextPage_BackPage("<");
-      TextPage_AddLowerPage(&LoRaPage, &BackPage);
+      TextPage_AddBackPage(&LoRaPage);
 
       static TextPage_t ApplyPage;
       ApplyPage = (TextPage_t) TextPage_DialogPage("Apply");
@@ -161,8 +157,7 @@ void Application_Init(void)
       TextPage_AddLowerPage(&LoRaPage, &ApplyPage);
 
       {
-        static TextPage_t BackPage = TextPage_BackPage("<");
-        TextPage_AddLowerPage(&ApplyPage, &BackPage);
+        TextPage_AddBackPage(&ApplyPage);
 
         static TextPage_t ConfirmPage = TextPage_BackPage("Ok");
         ConfirmPage.X = OLED.Width / 2;
@@ -178,8 +173,7 @@ void Application_Init(void)
       TextPage_AddLowerPage(&LoRaPage, &ReadPage);
 
       {
-        static TextPage_t BackPage = TextPage_BackPage("<");
-        TextPage_AddLowerPage(&ReadPage, &BackPage);
+        TextPage_AddBackPage(&ReadPage);
 
         static TextPage_t ConfirmPage = TextPage_BackPage("Ok");
         ConfirmPage.X = OLED.Width / 2;
@@ -188,13 +182,10 @@ void Application_Init(void)
         TextPage_AddLowerPage(&ReadPage, &ConfirmPage);
       }
 
-      static TextPage_t LoRaBaudRatePage = TextPage_OptionGroupPage("BaudRate", IntParameterPtr, &LoRa.ConfigArray[0]);
-      LoRaBaudRatePage.ShowCallback = TextPage_ShowOptionPageCallback;
-      TextPage_AddLowerPage(&LoRaPage, &LoRaBaudRatePage);
+      TextPage_AddOptionGroup(&LoRaPage, LoRaBaudRatePage, "BaudRate", &LoRa.ConfigArray[0]);
 
       {
-        static TextPage_t BackPage = TextPage_BackPage("<");
-        TextPage_AddLowerPage(&LoRaBaudRatePage, &BackPage);
+        TextPage_AddBackPage(&LoRaBaudRatePage);
 
         TextPage_AddOption(&LoRaBaudRatePage, "1200");
         TextPage_AddOption(&LoRaBaudRatePage, "2400");
@@ -206,13 +197,10 @@ void Application_Init(void)
         TextPage_AddOption(&LoRaBaudRatePage, "115200");
       }
 
-      static TextPage_t LoRaParityPage = TextPage_OptionGroupPage("Parity", IntParameterPtr, &LoRa.ConfigArray[1]);
-      LoRaParityPage.ShowCallback = TextPage_ShowOptionPageCallback;
-      TextPage_AddLowerPage(&LoRaPage, &LoRaParityPage);
+      TextPage_AddOptionGroup(&LoRaPage, LoRaParityPage, "Parity", &LoRa.ConfigArray[1]);
 
       {
-        static TextPage_t BackPage = TextPage_BackPage("<");
-        TextPage_AddLowerPage(&LoRaParityPage, &BackPage);
+        TextPage_AddBackPage(&LoRaParityPage);
 
         TextPage_AddOption(&LoRaParityPage, "None");
         TextPage_AddOption(&LoRaParityPage, "Even");
@@ -224,8 +212,7 @@ void Application_Init(void)
       TextPage_AddLowerPage(&LoRaPage, &LoRaAddressPage);
 
       {
-        static TextPage_t BackPage = TextPage_BackPage("<");
-        TextPage_AddLowerPage(&LoRaAddressPage, &BackPage);
+        TextPage_AddBackPage(&LoRaAddressPage);
       }
 
       static TextPage_t LoRaChannelPage = TextPage_NavigationPage("Channel");
@@ -233,17 +220,13 @@ void Application_Init(void)
       TextPage_AddLowerPage(&LoRaPage, &LoRaChannelPage);
 
       {
-        static TextPage_t BackPage = TextPage_BackPage("<");
-        TextPage_AddLowerPage(&LoRaChannelPage, &BackPage);
+        TextPage_AddBackPage(&LoRaChannelPage);
       }
 
-      static TextPage_t LoRaWLRatePage = TextPage_OptionGroupPage("WLRate", IntParameterPtr, &LoRa.ConfigArray[4]);
-      LoRaWLRatePage.ShowCallback = TextPage_ShowOptionPageCallback;
-      TextPage_AddLowerPage(&LoRaPage, &LoRaWLRatePage);
+      TextPage_AddOptionGroup(&LoRaPage, LoRaWLRatePage, "WLRate", &LoRa.ConfigArray[4]);
 
       {
-        static TextPage_t BackPage = TextPage_BackPage("<");
-        TextPage_AddLowerPage(&LoRaWLRatePage, &BackPage);
+        TextPage_AddBackPage(&LoRaWLRatePage);
 
         TextPage_AddOption(&LoRaWLRatePage, "0.3Kbps");
         TextPage_AddOption(&LoRaWLRatePage, "1.2Kbps");
@@ -253,13 +236,10 @@ void Application_Init(void)
         TextPage_AddOption(&LoRaWLRatePage, "19.2Kbps");
       }
 
-      static TextPage_t LoRaTPowerPage = TextPage_OptionGroupPage("TPower", IntParameterPtr, &LoRa.ConfigArray[5]);
-      LoRaTPowerPage.ShowCallback = TextPage_ShowOptionPageCallback;
-      TextPage_AddLowerPage(&LoRaPage, &LoRaTPowerPage);
+      TextPage_AddOptionGroup(&LoRaPage, LoRaTPowerPage, "TPower", &LoRa.ConfigArray[5]);
 
       {
-        static TextPage_t BackPage = TextPage_BackPage("<");
-        TextPage_AddLowerPage(&LoRaTPowerPage, &BackPage);
+        TextPage_AddBackPage(&LoRaTPowerPage);
 
         TextPage_AddOption(&LoRaTPowerPage, "11dBm");
         TextPage_AddOption(&LoRaTPowerPage, "14dBm");
@@ -267,37 +247,28 @@ void Application_Init(void)
         TextPage_AddOption(&LoRaTPowerPage, "20dBm");
       }
 
-      static TextPage_t LoRaWLTimePage = TextPage_OptionGroupPage("WLTime", IntParameterPtr, &LoRa.ConfigArray[6]);
-      LoRaWLTimePage.ShowCallback = TextPage_ShowOptionPageCallback;
-      TextPage_AddLowerPage(&LoRaPage, &LoRaWLTimePage);
+      TextPage_AddOptionGroup(&LoRaPage, LoRaWLTimePage, "WLTime", &LoRa.ConfigArray[6]);
 
       {
-        static TextPage_t BackPage = TextPage_BackPage("<");
-        TextPage_AddLowerPage(&LoRaWLTimePage, &BackPage);
+        TextPage_AddBackPage(&LoRaWLTimePage);
 
         TextPage_AddOption(&LoRaWLTimePage, "1s");
         TextPage_AddOption(&LoRaWLTimePage, "2s");
       }
 
-      static TextPage_t LoRaTModePage = TextPage_OptionGroupPage("TMode", IntParameterPtr, &LoRa.ConfigArray[7]);
-      LoRaTModePage.ShowCallback = TextPage_ShowOptionPageCallback;
-      TextPage_AddLowerPage(&LoRaPage, &LoRaTModePage);
+      TextPage_AddOptionGroup(&LoRaPage, LoRaTModePage, "TMode", &LoRa.ConfigArray[7]);
 
       {
-        static TextPage_t BackPage = TextPage_BackPage("<");
-        TextPage_AddLowerPage(&LoRaTModePage, &BackPage);
+        TextPage_AddBackPage(&LoRaTModePage);
 
         TextPage_AddOption(&LoRaTModePage, "Transparent");
         TextPage_AddOption(&LoRaTModePage, "Directed");
       }
 
-      static TextPage_t LoRaCWModePage = TextPage_OptionGroupPage("CWMode", IntParameterPtr, &LoRa.ConfigArray[8]);
-      LoRaCWModePage.ShowCallback = TextPage_ShowOptionPageCallback;
-      TextPage_AddLowerPage(&LoRaPage, &LoRaCWModePage);
+      TextPage_AddOptionGroup(&LoRaPage, LoRaCWModePage, "CWMode", &LoRa.ConfigArray[8]);
 
       {
-        static TextPage_t BackPage = TextPage_BackPage("<");
-        TextPage_AddLowerPage(&LoRaCWModePage, &BackPage);
+        TextPage_AddBackPage(&LoRaCWModePage);
 
         TextPage_AddOption(&LoRaCWModePage, "Normal");
         TextPage_AddOption(&LoRaCWModePage, "WakeUp");
