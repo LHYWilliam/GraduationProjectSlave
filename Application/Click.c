@@ -47,3 +47,11 @@ void TextPage_LoRaSettingReadCallback(TextPage_t **TextPage, SelectioneBar_t *Se
 
   TextPage_EnterCallback(TextPage, SelectioneBar);
 }
+
+void TextPage_NextPageCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar)
+{
+  TextPageIndex = (TextPageIndex + 1) % TextPageCount;
+  *TextPage = TextPages[TextPageIndex];
+
+  SelectioneBar_BindTextPage(SelectioneBar, (*TextPage)->LowerPages);
+}

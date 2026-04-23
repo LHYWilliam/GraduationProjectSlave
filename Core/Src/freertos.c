@@ -27,6 +27,7 @@
 /* USER CODE BEGIN Includes */
 
 #include "Application.h"
+#include <stdint.h>
 
 /* USER CODE END Includes */
 
@@ -246,9 +247,9 @@ void LoRaTimerCallback(void *argument)
 
   LoRa_Printf(
       &LoRa,
-      "MQ2: [%.3f] | MQ3: [%.3f]\r\n",
-      ADCToVoltage(MQSensor_GetData(&MQxSensor[0])),
-      ADCToVoltage(MQSensor_GetData(&MQxSensor[1])));
+      "[Device1]: MQ2: %dPPM | MQ3: %dPPM\r\n",
+      (uint16_t)MQSensor_CalculateMQ2PPM(MQSensor_GetData(&MQxSensor[0])),
+      (uint16_t)MQSensor_CalculateMQ3PPM(MQSensor_GetData(&MQxSensor[1])));
 
   /* USER CODE END LoRaTimerCallback */
 }

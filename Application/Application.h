@@ -39,6 +39,11 @@ extern MQSensor_t MQxSensor[2];
 extern Serial_t Serial;
 extern LoRa_t LoRa;
 
+#define PageCount 4
+extern uint8_t TextPageIndex;
+extern uint8_t TextPageCount;
+extern TextPage_t *TextPages[PageCount];
+
 void Application_Init(void);
 
 void TextPage_ShowCallback(TextPage_t *TextPage, OLED_t *OLED);
@@ -46,6 +51,7 @@ void TextPage_ShowMQxPageCallback(TextPage_t *TextPage, OLED_t *OLED);
 void TextPage_ShowMQPageCallback(TextPage_t *TextPage, OLED_t *OLED);
 void TextPage_ShowOptionPageCallback(TextPage_t *TextPage, OLED_t *OLED);
 void TextPage_ShowDialogCallback(TextPage_t *TextPage, OLED_t *OLED);
+void TextPage_ShowLoRaPage(TextPage_t *TextPage, OLED_t *OLED);
 
 void TextPage_UpdateCallback(TextPage_t *TextPage, OLED_t *OLED);
 void TextPage_UpdateDialogCallback(TextPage_t *TextPage, OLED_t *OLED);
@@ -55,6 +61,7 @@ void TextPage_EnterCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBa
 void TextPage_ChooseOptionCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar);
 void TextPage_LoRaSettingApplyCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar);
 void TextPage_LoRaSettingReadCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar);
+void TextPage_NextPageCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar);
 
 void TextPage_CursorCallback(TextPage_t *TextPage, SelectioneBar_t *SelectioneBar, RotationDirection Direction);
 
@@ -76,6 +83,17 @@ void TextPage_CursorCallback(TextPage_t *TextPage, SelectioneBar_t *SelectioneBa
     }                                                                                   \
                                                                                         \
     __VA_ARGS__                                                                         \
+  }
+
+#define TextPage_EmptyPage(title) \
+  {                               \
+      .Title = title,             \
+  }
+
+#define TextPage_NextPage(title)                  \
+  {                                               \
+      .Title = title,                             \
+      .ClickCallback = TextPage_NextPageCallback, \
   }
 
 #define TextPage_BackPage(title)                   \

@@ -51,11 +51,15 @@ MQSensor_t MQxSensor[2] = {
     {
         .Data = MQ2Data,
         .Length = MQ2DataLength,
+        .A = 574.25,
+        .B = -2.222,
         .Threshold,
     },
     {
         .Data = MQ3Data,
         .Length = MQ3DataLength,
+        .A = 0.4091,
+        .B = 0.652,
         .Threshold,
     },
 };
@@ -70,217 +74,121 @@ LoRa_t LoRa = {
     .AUX_Pin = LoRaAUX_Pin,
     .MD0_Port = LoRaMD0_GPIO_Port,
     .MD0_Pin = LoRaMD0_Pin,
-    // .Config = {
-    //     .BaudRate = LoRaBaudRate115200,
-    //     .Parity = LoRaParityNone,
-    //     .Address = 0x0000,
-    //     .Channel = 23,
-    //     .WLRate = LoRaWLRate19_2Kbps,
-    //     .TPower = LoRaTPower20dBm,
-    //     .WLTime = LoRaWLTime1s,
-    //     .TMode = LoRaTModeTransparentTransmission,
-    //     .CWMode = LoRaCWModeNormal,
-    // },
+    .Config = {
+        .BaudRate = LoRaBaudRate115200,
+        .Parity = LoRaParityNone,
+        .Address = 0x0000,
+        .Channel = 23,
+        .WLRate = LoRaWLRate19_2Kbps,
+        .TPower = LoRaTPower20dBm,
+        .WLTime = LoRaWLTime1s,
+        .TMode = LoRaTModeTransparentTransmission,
+        .CWMode = LoRaCWModeNormal,
+    },
 };
+
+#define PageCount 4
+uint8_t TextPageIndex, TextPageCount = PageCount;
+TextPage_t *TextPages[PageCount];
+
+void OLED_Info(OLED_t *OLED, char *Message)
+{
+  OLED_ClearBuffer(OLED);
+  OLED_PrintfCenter(OLED, Message);
+  OLED_SendBuffer(OLED);
+  vTaskDelay(pdMS_TO_TICKS(500));
+}
 
 void Application_Init(void)
 {
   OLED_Init(&OLED);
-  Encoder_Start(&Encoder);
 
-  Sampler_Start_DMA_TIM_IT(&Sampler);
-
+  OLED_Info(&OLED, "LoRa Connecting...");
   LoRa_StartIdleIT(&LoRa);
   LoRa_ATMode(&LoRa);
-  // LoRa_ApplyConfig(&LoRa, &LoRa.Config);
+  LoRa_ApplyConfig(&LoRa, &LoRa.Config);
   LoRa_ReadConfig(&LoRa);
   LoRa_CommunicationMode(&LoRa);
+  OLED_Info(&OLED, "LoRa Connected");
 
-  static TextPage_t HomePage = TextPage_NavigationPage("Home");
-  TextPage = &HomePage;
+  OLED_Info(&OLED, "Encoder Initing...");
+  Encoder_Start(&Encoder);
+  OLED_Info(&OLED, "Encoder Initialized");
 
-  TextPage_AddBackPage(&HomePage);
+  OLED_Info(&OLED, "Sampler Initing...");
+  Sampler_Start_DMA_TIM_IT(&Sampler);
+  OLED_Info(&OLED, "Sampler Initialized");
 
   static TextPage_t MQxSensorPage = TextPage_NavigationPage("MQxSensor");
   MQxSensorPage.ShowCallback = TextPage_ShowMQxPageCallback;
-  TextPage_AddLowerPage(&HomePage, &MQxSensorPage);
 
   {
-    TextPage_AddBackPage(&MQxSensorPage);
+    static TextPage_t BackPage = TextPage_NextPage(">");
+    TextPage_AddLowerPage(&MQxSensorPage, &BackPage);
 
-    {
-      static TextPage_t MQ2Page = TextPage_MQxPage("MQ2");
-      TextPage_AddLowerPage(&MQxSensorPage, &MQ2Page);
+    static TextPage_t MQ2TextPage = TextPage_MQxPage("MQ2");
+    TextPage_AddLowerPage(&MQxSensorPage, &MQ2TextPage);
 
-      {
-        static TextPage_t BackPage = TextPage_BackPage("<");
-        BackPage.Y = 1;
-        BackPage.RotationCallback = NULL;
-        TextPage_AddLowerPage(&MQ2Page, &BackPage);
-
-        static TextPage_t MQ2ChartPage;
-        MQ2ChartPage = (TextPage_t) TextPage_ChartPage("MQ2");
-        TextPage_AddLowerPage(&MQ2Page, &MQ2ChartPage);
-      }
-
-      static TextPage_t MQ3Page = TextPage_MQxPage("MQ3");
-      TextPage_AddLowerPage(&MQxSensorPage, &MQ3Page);
-
-      {
-        static TextPage_t BackPage = TextPage_BackPage("<");
-        BackPage.Y = 1;
-        BackPage.RotationCallback = NULL;
-        TextPage_AddLowerPage(&MQ3Page, &BackPage);
-
-        static TextPage_t MQ3ChartPage;
-        MQ3ChartPage = (TextPage_t) TextPage_ChartPage("MQ3");
-        TextPage_AddLowerPage(&MQ3Page, &MQ3ChartPage);
-      }
-    }
+    static TextPage_t MQ3TextPage = TextPage_MQxPage("MQ3");
+    TextPage_AddLowerPage(&MQxSensorPage, &MQ3TextPage);
   }
 
-  static TextPage_t SettingPage = TextPage_NavigationPage("Setting");
-  TextPage_AddLowerPage(&HomePage, &SettingPage);
-
+  static TextPage_t MQ2Page = TextPage_MQxPage("MQ2");
+  MQ2Page.Index = 1;
   {
-    TextPage_AddBackPage(&SettingPage);
+    static TextPage_t BackPage = TextPage_NextPage(">");
+    TextPage_AddLowerPage(&MQ2Page, &BackPage);
 
-    static TextPage_t LoRaPage = TextPage_NavigationPage("LoRa");
-    TextPage_AddLowerPage(&SettingPage, &LoRaPage);
-
-    {
-      TextPage_AddBackPage(&LoRaPage);
-
-      static TextPage_t ApplyPage;
-      ApplyPage = (TextPage_t) TextPage_DialogPage("Apply");
-      ApplyPage.ClickCallback = TextPage_LoRaSettingApplyCallback;
-      TextPage_AddLowerPage(&LoRaPage, &ApplyPage);
-
-      {
-        TextPage_AddBackPage(&ApplyPage);
-
-        static TextPage_t ConfirmPage = TextPage_BackPage("Ok");
-        ConfirmPage.X = OLED.Width / 2;
-        ConfirmPage.Y = OLED.Height / 2;
-        ConfirmPage.UpperPage = &LoRaPage;
-        TextPage_AddLowerPage(&ApplyPage, &ConfirmPage);
-      }
-
-
-      static TextPage_t ReadPage;
-      ReadPage = (TextPage_t) TextPage_DialogPage("Read");
-      ReadPage.ClickCallback = TextPage_LoRaSettingReadCallback;
-      TextPage_AddLowerPage(&LoRaPage, &ReadPage);
-
-      {
-        TextPage_AddBackPage(&ReadPage);
-
-        static TextPage_t ConfirmPage = TextPage_BackPage("Ok");
-        ConfirmPage.X = OLED.Width / 2;
-        ConfirmPage.Y = OLED.Height / 2;
-        ConfirmPage.UpperPage = &LoRaPage;
-        TextPage_AddLowerPage(&ReadPage, &ConfirmPage);
-      }
-
-      TextPage_AddOptionGroup(&LoRaPage, LoRaBaudRatePage, "BaudRate", &LoRa.ConfigArray[0]);
-
-      {
-        TextPage_AddBackPage(&LoRaBaudRatePage);
-
-        TextPage_AddOption(&LoRaBaudRatePage, "1200");
-        TextPage_AddOption(&LoRaBaudRatePage, "2400");
-        TextPage_AddOption(&LoRaBaudRatePage, "4800");
-        TextPage_AddOption(&LoRaBaudRatePage, "9600");
-        TextPage_AddOption(&LoRaBaudRatePage, "19200");
-        TextPage_AddOption(&LoRaBaudRatePage, "38400");
-        TextPage_AddOption(&LoRaBaudRatePage, "57600");
-        TextPage_AddOption(&LoRaBaudRatePage, "115200");
-      }
-
-      TextPage_AddOptionGroup(&LoRaPage, LoRaParityPage, "Parity", &LoRa.ConfigArray[1]);
-
-      {
-        TextPage_AddBackPage(&LoRaParityPage);
-
-        TextPage_AddOption(&LoRaParityPage, "None");
-        TextPage_AddOption(&LoRaParityPage, "Even");
-        TextPage_AddOption(&LoRaParityPage, "Odd");
-      }
-
-      static TextPage_t LoRaAddressPage = TextPage_NavigationPage("Address");
-      LoRaAddressPage.ShowCallback = TextPage_ShowOptionPageCallback;
-      TextPage_AddLowerPage(&LoRaPage, &LoRaAddressPage);
-
-      {
-        TextPage_AddBackPage(&LoRaAddressPage);
-      }
-
-      static TextPage_t LoRaChannelPage = TextPage_NavigationPage("Channel");
-      LoRaChannelPage.ShowCallback = TextPage_ShowOptionPageCallback;
-      TextPage_AddLowerPage(&LoRaPage, &LoRaChannelPage);
-
-      {
-        TextPage_AddBackPage(&LoRaChannelPage);
-      }
-
-      TextPage_AddOptionGroup(&LoRaPage, LoRaWLRatePage, "WLRate", &LoRa.ConfigArray[4]);
-
-      {
-        TextPage_AddBackPage(&LoRaWLRatePage);
-
-        TextPage_AddOption(&LoRaWLRatePage, "0.3Kbps");
-        TextPage_AddOption(&LoRaWLRatePage, "1.2Kbps");
-        TextPage_AddOption(&LoRaWLRatePage, "2.4Kbps");
-        TextPage_AddOption(&LoRaWLRatePage, "4.8Kbps");
-        TextPage_AddOption(&LoRaWLRatePage, "9.6Kbps");
-        TextPage_AddOption(&LoRaWLRatePage, "19.2Kbps");
-      }
-
-      TextPage_AddOptionGroup(&LoRaPage, LoRaTPowerPage, "TPower", &LoRa.ConfigArray[5]);
-
-      {
-        TextPage_AddBackPage(&LoRaTPowerPage);
-
-        TextPage_AddOption(&LoRaTPowerPage, "11dBm");
-        TextPage_AddOption(&LoRaTPowerPage, "14dBm");
-        TextPage_AddOption(&LoRaTPowerPage, "17dBm");
-        TextPage_AddOption(&LoRaTPowerPage, "20dBm");
-      }
-
-      TextPage_AddOptionGroup(&LoRaPage, LoRaWLTimePage, "WLTime", &LoRa.ConfigArray[6]);
-
-      {
-        TextPage_AddBackPage(&LoRaWLTimePage);
-
-        TextPage_AddOption(&LoRaWLTimePage, "1s");
-        TextPage_AddOption(&LoRaWLTimePage, "2s");
-      }
-
-      TextPage_AddOptionGroup(&LoRaPage, LoRaTModePage, "TMode", &LoRa.ConfigArray[7]);
-
-      {
-        TextPage_AddBackPage(&LoRaTModePage);
-
-        TextPage_AddOption(&LoRaTModePage, "Transparent");
-        TextPage_AddOption(&LoRaTModePage, "Directed");
-      }
-
-      TextPage_AddOptionGroup(&LoRaPage, LoRaCWModePage, "CWMode", &LoRa.ConfigArray[8]);
-
-      {
-        TextPage_AddBackPage(&LoRaCWModePage);
-
-        TextPage_AddOption(&LoRaCWModePage, "Normal");
-        TextPage_AddOption(&LoRaCWModePage, "WakeUp");
-        TextPage_AddOption(&LoRaCWModePage, "LowPower");
-        TextPage_AddOption(&LoRaCWModePage, "SignalEnhancement");
-      }
-    }
+    static TextPage_t MQ2ChartPage;
+    MQ2ChartPage = (TextPage_t) TextPage_ChartPage("MQ2");
+    TextPage_AddLowerPage(&MQ2Page, &MQ2ChartPage);
   }
 
-  TextPage_Init(&HomePage, &OLED);
+  static TextPage_t MQ3Page = TextPage_MQxPage("MQ3");
+  MQ3Page.Index = 2;
+  {
+    static TextPage_t BackPage = TextPage_NextPage(">");
+    TextPage_AddLowerPage(&MQ3Page, &BackPage);
 
-  SelectioneBar_BindTextPage(&SelectioneBar, HomePage.HeadPage);
+    static TextPage_t MQ3ChartPage;
+    MQ3ChartPage = (TextPage_t) TextPage_ChartPage("MQ3");
+    TextPage_AddLowerPage(&MQ3Page, &MQ3ChartPage);
+  }
+
+  static TextPage_t LoRaPage = TextPage_NavigationPage("LoRa");
+  LoRaPage.ShowCallback = TextPage_ShowLoRaPage;
+  {
+    static TextPage_t BackPage = TextPage_NextPage(">");
+    BackPage.RotationCallback = TextPage_CursorCallback;
+    TextPage_AddLowerPage(&LoRaPage, &BackPage);
+
+    static TextPage_t IDPage = TextPage_EmptyPage("ID");
+    IDPage.IntParameter = 0x01;
+    IDPage.RotationCallback = TextPage_CursorCallback;
+    TextPage_AddLowerPage(&LoRaPage, &IDPage);
+
+    static TextPage_t OnlinePage = TextPage_EmptyPage("Online");
+    OnlinePage.IntParameter = 1;
+    OnlinePage.RotationCallback = TextPage_CursorCallback;
+    TextPage_AddLowerPage(&LoRaPage, &OnlinePage);
+
+    static TextPage_t UploadPage = TextPage_EmptyPage("Upload");
+    UploadPage.IntParameter = 1;
+    UploadPage.RotationCallback = TextPage_CursorCallback;
+    TextPage_AddLowerPage(&LoRaPage, &UploadPage);
+  }
+
+  TextPages[0] = &MQxSensorPage;
+  TextPages[1] = &MQ2Page;
+  TextPages[2] = &MQ3Page;
+  TextPages[3] = &LoRaPage;
+  TextPage = TextPages[0];
+
+  for (uint8_t i = 0; i < TextPageCount; i++)
+  {
+    TextPage_Init(TextPages[i], &OLED);
+  }
+  SelectioneBar_BindTextPage(&SelectioneBar, TextPages[0]->HeadPage);
 }
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)

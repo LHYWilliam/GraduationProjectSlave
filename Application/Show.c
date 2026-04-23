@@ -13,8 +13,19 @@ void TextPage_ShowMQxPageCallback(TextPage_t *TextPage, OLED_t *OLED)
         OLED_Printf(OLED, Page->X, Page->Y, Page->Title);
       } else {
         OLED_Printf(OLED, Page->X, Page->Y, Page->Title);
-        OLED_Printf(OLED, OLED->Width / 2, Page->Y, "%.3f V",
-                    ADCToVoltage(MQSensor_GetData(&MQxSensor[Page->Index - 1])));
+
+        uint16_t ADCValue = MQSensor_GetData(&MQxSensor[Page->Index - 1]);
+        uint16_t PPM;
+
+        if (Page->Index == 1)
+        {
+          PPM = MQSensor_CalculateMQ2PPM(ADCValue);
+        } else if (Page->Index == 2)
+        {
+          PPM = MQSensor_CalculateMQ3PPM(ADCValue);
+        }
+
+        OLED_Printf(OLED, OLED->Width / 2, Page->Y, "%d PPM", PPM);
       });
 }
 
@@ -30,12 +41,24 @@ void TextPage_ShowMQPageCallback(TextPage_t *TextPage, OLED_t *OLED)
       Page->Y,
       "%s %s",
       TextPage->Title, MQxSensor[Index].State ? "Safe" : "Danger");
+
+  uint16_t ADCValue = MQSensor_GetData(&MQxSensor[Index]);
+  uint16_t PPM;
+
+  if (TextPage->Index == 1)
+  {
+    PPM = MQSensor_CalculateMQ2PPM(ADCValue);
+  } else if (TextPage->Index == 2)
+  {
+    PPM = MQSensor_CalculateMQ3PPM(ADCValue);
+  }
+
   OLED_Printf(
       OLED,
       Page->X,
       OLED->Height - OLED->FontHeight,
-      "%.3f V",
-      ADCToVoltage(MQSensor_GetData(&MQxSensor[Index])));
+      "%d PPM",
+      PPM);
 
   Page = Page->DownPage;
 
@@ -88,4 +111,20 @@ void TextPage_ShowDialogCallback(TextPage_t *TextPage, OLED_t *OLED)
     OLED_Printf(OLED, Page->X, Page->Y, Page->Title);
     OLED_DrawHollowRectangle(OLED, Page->X - 2, Page->Y - 2, Page->Width + 4, Page->Height + 4, 1);
   }
+}
+
+void TextPage_ShowLoRaPage(TextPage_t *TextPage, OLED_t *OLED)
+{
+  ShowTitleAndTexts(
+      OLED_Printf(OLED, Page->X, Page->Y, Page->Title);
+    
+    switch (Page->Index) {
+    case 1:
+      OLED_Printf(OLED, OLED->Width - OLED->FontWidth * 6, Page->Y, "0x%02X", Page->IntParameter);
+      break;
+    case 2:
+    case 3:
+      OLED_ShowImage(OLED, OLED->Width - OLED->FontWidth * 6, Page->Y, 8, 8, Page->IntParameter ? SettingImage[1] : SettingImage[0]);
+      break;
+    });
 }

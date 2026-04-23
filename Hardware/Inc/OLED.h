@@ -56,6 +56,7 @@ void OLED_SetFont(OLED_t *Self, OLEDFont Font);
 void OLED_ShowChar(OLED_t *Self, int16_t X, int16_t Y, char Char);
 void OLED_ShowString(OLED_t *Self, int16_t X, int16_t Y, const char *String);
 void OLED_Printf(OLED_t *Self, int16_t X, int16_t Y, const char *Format, ...);
+void OLED_PrintfCenter(OLED_t *Self, const char *Format, ...);
 
 void OLED_ClearBuffer(OLED_t *Self);
 void OLED_SendBuffer(OLED_t *Self);

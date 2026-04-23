@@ -40,6 +40,7 @@ void OLED_Init(OLED_t *Self)
   OLED_Config(Self);
 
   OLED_Clear(Self);
+  OLED_SendBuffer(Self);
 }
 
 void OLED_SetCursor(OLED_t *Self, uint8_t Page, uint8_t X)
@@ -409,6 +410,19 @@ void OLED_Printf(OLED_t *Self, int16_t X, int16_t Y, const char *Format, ...)
   va_start(Args, Format);
   vsprintf((char *) Self->PrintfBuffer, Format, Args);
   va_end(Args);
+
+  OLED_ShowString(Self, X, Y, (char *) Self->PrintfBuffer);
+}
+
+void OLED_PrintfCenter(OLED_t *Self, const char *Format, ...)
+{
+  va_list Args;
+  va_start(Args, Format);
+  vsprintf((char *) Self->PrintfBuffer, Format, Args);
+  va_end(Args);
+
+  uint8_t X = Self->Width / 2 - Self->FontWidth * strlen((char *) Self->PrintfBuffer) / 2;
+  uint8_t Y = Self->Height / 2 - Self->FontHeight / 2;
 
   OLED_ShowString(Self, X, Y, (char *) Self->PrintfBuffer);
 }
