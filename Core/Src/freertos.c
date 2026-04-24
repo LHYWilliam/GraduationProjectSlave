@@ -27,7 +27,6 @@
 /* USER CODE BEGIN Includes */
 
 #include "Application.h"
-#include <stdint.h>
 
 /* USER CODE END Includes */
 
@@ -53,27 +52,25 @@
 /* Definitions for OLEDFlushTask */
 osThreadId_t OLEDFlushTaskHandle;
 const osThreadAttr_t OLEDFlushTask_attributes = {
-  .name = "OLEDFlushTask",
-  .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+    .name = "OLEDFlushTask",
+    .stack_size = 256 * 4,
+    .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for OLEDInteraction */
 osThreadId_t OLEDInteractionHandle;
 const osThreadAttr_t OLEDInteraction_attributes = {
-  .name = "OLEDInteraction",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
+    .name = "OLEDInteraction",
+    .stack_size = 128 * 4,
+    .priority = (osPriority_t) osPriorityHigh,
 };
 /* Definitions for LEDTimer */
 osTimerId_t LEDTimerHandle;
 const osTimerAttr_t LEDTimer_attributes = {
-  .name = "LEDTimer"
-};
+    .name = "LEDTimer"};
 /* Definitions for LoRaTimer */
 osTimerId_t LoRaTimerHandle;
 const osTimerAttr_t LoRaTimer_attributes = {
-  .name = "LoRaTimer"
-};
+    .name = "LoRaTimer"};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -96,7 +93,8 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   * @param  None
   * @retval None
   */
-void MX_FREERTOS_Init(void) {
+void MX_FREERTOS_Init(void)
+{
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
@@ -142,7 +140,6 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
-
 }
 
 /* USER CODE BEGIN Header_OLEDFlushTaskCode */
@@ -245,11 +242,17 @@ void LoRaTimerCallback(void *argument)
     return;
   }
 
-  LoRa_Printf(
-      &LoRa,
-      "[Device1]: MQ2: %dPPM | MQ3: %dPPM\r\n",
-      (uint16_t)MQSensor_CalculateMQ2PPM(MQSensor_GetData(&MQxSensor[0])),
-      (uint16_t)MQSensor_CalculateMQ3PPM(MQSensor_GetData(&MQxSensor[1])));
+  // LoRa_Printf(
+  //     &LoRa,
+  //     "[Device1]: MQ2: %dPPM | MQ3: %dPPM\r\n",
+  //     (uint16_t)MQSensor_CalculateMQ2PPM(MQSensor_GetData(&MQxSensor[0])),
+  //     (uint16_t)MQSensor_CalculateMQ3PPM(MQSensor_GetData(&MQxSensor[1])));
+
+  uint16_t MQ2PPM = (uint16_t) MQSensor_CalculateMQ2PPM(MQSensor_GetData(&MQxSensor[0]));
+  uint16_t MQ3PPM = (uint16_t) MQSensor_CalculateMQ3PPM(MQSensor_GetData(&MQxSensor[1]));
+  uint8_t Pack[8] = {0xAA, 0x02, 0x01,0x02,(MQ2PPM >> 8) & 0XFF, MQ2PPM & 0XFF, (MQ3PPM >> 8) & 0xFF, MQ3PPM & 0XFF};
+
+  LoRa_SendPack(&LoRa, Pack, 8);
 
   /* USER CODE END LoRaTimerCallback */
 }
@@ -330,4 +333,3 @@ void Encoder_Test(void)
 }
 
 /* USER CODE END Application */
-

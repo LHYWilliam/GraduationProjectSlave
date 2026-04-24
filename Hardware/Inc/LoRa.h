@@ -108,6 +108,7 @@ typedef struct
 
 void LoRa_StartIdleIT(LoRa_t *Self);
 void LoRa_Printf(LoRa_t *Self, const char *Format, ...);
+void LoRa_SendPack(LoRa_t *Self, uint8_t *Pack, uint8_t Length);
 
 void LoRa_ATMode(LoRa_t *Self);
 void LoRa_CommunicationMode(LoRa_t *Self);

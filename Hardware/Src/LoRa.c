@@ -73,6 +73,11 @@ void LoRa_Printf(LoRa_t *Self, const char *Format, ...)
   }
 }
 
+void LoRa_SendPack(LoRa_t *Self, uint8_t *Pack, uint8_t Length)
+{
+  HAL_UART_Transmit(Self->hUARTx, Pack, Length, HAL_MAX_DELAY);
+}
+
 void LoRa_ATMode(LoRa_t *Self)
 {
   HAL_GPIO_WritePin(Self->AUX_Port, Self->AUX_Pin, GPIO_PIN_RESET);
