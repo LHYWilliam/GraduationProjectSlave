@@ -91,6 +91,9 @@ LoRa_t LoRa = {
 uint8_t TextPageIndex, TextPageCount = PageCount;
 TextPage_t *TextPages[PageCount];
 
+Message_t Message;
+Controller_t Controller;
+
 void OLED_Info(OLED_t *OLED, char *Message)
 {
   OLED_ClearBuffer(OLED);
@@ -163,19 +166,26 @@ void Application_Init(void)
     TextPage_AddLowerPage(&LoRaPage, &BackPage);
 
     static TextPage_t IDPage = TextPage_EmptyPage("ID");
-    IDPage.IntParameter = 0x01;
+    IDPage.IntParameterPtr = &Controller.ID;
     IDPage.RotationCallback = TextPage_CursorCallback;
     TextPage_AddLowerPage(&LoRaPage, &IDPage);
 
     static TextPage_t OnlinePage = TextPage_EmptyPage("Online");
-    OnlinePage.IntParameter = 1;
+    OnlinePage.IntParameterPtr = &Controller.Online;
     OnlinePage.RotationCallback = TextPage_CursorCallback;
     TextPage_AddLowerPage(&LoRaPage, &OnlinePage);
 
     static TextPage_t UploadPage = TextPage_EmptyPage("Upload");
-    UploadPage.IntParameter = 1;
+    UploadPage.IntParameterPtr = &Controller.Upload;
+    UploadPage.ClickCallback = TextPage_UploadCallback;
     UploadPage.RotationCallback = TextPage_CursorCallback;
     TextPage_AddLowerPage(&LoRaPage, &UploadPage);
+
+    static TextPage_t RegisterPage = TextPage_EmptyPage("Register");
+    RegisterPage.IntParameterPtr = &Controller.Register;
+    RegisterPage.ClickCallback = TextPage_RegisterCallback;
+    RegisterPage.RotationCallback = TextPage_CursorCallback;
+    TextPage_AddLowerPage(&LoRaPage, &RegisterPage);
   }
 
   TextPages[0] = &MQxSensorPage;
@@ -206,6 +216,25 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
       } else
       {
         LoRa.ReceiveOK = RESET;
+      }
+    } else if (LoRa.Mode == LoRaModeCommunication)
+    {
+      if (LoRa.RxBuffer[0] == 0xAA && LoRa.ReceiveSize >= 4 && LoRa.ReceiveSize == (4 + LoRa.RxBuffer[3] * 2))
+      {
+        Message.Head = LoRa.RxBuffer[0];
+        Message.MessageType = LoRa.RxBuffer[1];
+        Message.DeviceID = LoRa.RxBuffer[2];
+        Message.Length = LoRa.RxBuffer[3];
+        Message.Data = &LoRa.RxBuffer[4];
+        Message.Tick = osKernelGetTickCount();
+
+        LoRa.ReceiveMessage = SET;
+      } else if (LoRa.RxBuffer[0] != 0xAA || LoRa.ReceiveSize >= 64)
+      {
+        LoRa_CLearReceive(&LoRa);
+      } else
+      {
+        LoRa.ReceiveMessage = RESET;
       }
     }
   }

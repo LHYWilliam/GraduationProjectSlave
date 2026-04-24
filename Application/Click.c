@@ -1,4 +1,5 @@
 #include "Application.h"
+#include "stm32f1xx_hal_def.h"
 
 void TextPage_BackCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar)
 {
@@ -54,4 +55,33 @@ void TextPage_NextPageCallback(TextPage_t **TextPage, SelectioneBar_t *Selection
   *TextPage = TextPages[TextPageIndex];
 
   SelectioneBar_BindTextPage(SelectioneBar, (*TextPage)->LowerPages);
+}
+
+void TextPage_UploadCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar)
+{
+  UNUSED(TextPage);
+  UNUSED(SelectioneBar);
+
+  if (Controller.Upload)
+  {
+    Controller.Upload = 0;
+  } else
+  {
+    Controller.Upload = 1;
+  }
+}
+
+void TextPage_RegisterCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar)
+{
+  UNUSED(TextPage);
+  UNUSED(SelectioneBar);
+
+  if (Controller.Register == 0)
+  {
+    Controller.Connecting = 1;
+
+    uint8_t Pack[4] = {0xAA, SalveDeviceRegister, 0x00, 0x00};
+
+    LoRa_SendPack(&LoRa, Pack, 4);
+  }
 }

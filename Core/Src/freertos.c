@@ -19,6 +19,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "FreeRTOS.h"
+#include "LoRa.h"
+#include "cmsis_os2.h"
 #include "task.h"
 #include "main.h"
 #include "cmsis_os.h"
@@ -118,7 +120,7 @@ void MX_FREERTOS_Init(void)
   /* start timers, add new ones, ... */
 
   osTimerStart(LEDTimerHandle, 100);
-  osTimerStart(LoRaTimerHandle, 1000);
+  osTimerStart(LoRaTimerHandle, 10);
 
   /* USER CODE END RTOS_TIMERS */
 
@@ -242,17 +244,38 @@ void LoRaTimerCallback(void *argument)
     return;
   }
 
-  // LoRa_Printf(
-  //     &LoRa,
-  //     "[Device1]: MQ2: %dPPM | MQ3: %dPPM\r\n",
-  //     (uint16_t)MQSensor_CalculateMQ2PPM(MQSensor_GetData(&MQxSensor[0])),
-  //     (uint16_t)MQSensor_CalculateMQ3PPM(MQSensor_GetData(&MQxSensor[1])));
+  if (LoRa.ReceiveMessage)
+  {
+    if (Message.MessageType == MasterDeviceResponse && Controller.Connecting)
+    {
+      Controller.ID = Message.Data[0];
+      Controller.Online = 1;
+      Controller.Register = 1;
+      Controller.Connecting = 0;
+    } else if (Message.MessageType == SalveDeviceUnregister && Controller.Online)
+    {
+      if (Controller.ID == Message.Data[0])
+      {
+        Controller.ID = 0;
+        Controller.Online = 0;
+        Controller.Upload = 0;
+        Controller.Register = 0;
+      }
+    }
 
-  uint16_t MQ2PPM = (uint16_t) MQSensor_CalculateMQ2PPM(MQSensor_GetData(&MQxSensor[0]));
-  uint16_t MQ3PPM = (uint16_t) MQSensor_CalculateMQ3PPM(MQSensor_GetData(&MQxSensor[1]));
-  uint8_t Pack[8] = {0xAA, 0x02, 0x01,0x02,(MQ2PPM >> 8) & 0XFF, MQ2PPM & 0XFF, (MQ3PPM >> 8) & 0xFF, MQ3PPM & 0XFF};
+    LoRa_CLearReceive(&LoRa);
+  }
 
-  LoRa_SendPack(&LoRa, Pack, 8);
+  if (Controller.Online && Controller.Upload && (osKernelGetTickCount() - Controller.LastUploadTick) >= 1000)
+  {
+    Controller.LastUploadTick = osKernelGetTickCount();
+
+    uint16_t Sensor1PPM = (uint16_t) MQSensor_CalculateMQ2PPM(MQSensor_GetData(&MQxSensor[0]));
+    uint16_t Sensor2PPM = (uint16_t) MQSensor_CalculateMQ3PPM(MQSensor_GetData(&MQxSensor[1]));
+    uint8_t Pack[8] = {0xAA, SalveDeviceUpload, Controller.ID, 0x02, (Sensor1PPM >> 8) & 0XFF, Sensor1PPM & 0XFF, (Sensor2PPM >> 8) & 0xFF, Sensor2PPM & 0XFF};
+
+    LoRa_SendPack(&LoRa, Pack, 8);
+  }
 
   /* USER CODE END LoRaTimerCallback */
 }

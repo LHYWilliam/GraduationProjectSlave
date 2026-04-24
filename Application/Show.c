@@ -120,11 +120,12 @@ void TextPage_ShowLoRaPage(TextPage_t *TextPage, OLED_t *OLED)
     
     switch (Page->Index) {
     case 1:
-      OLED_Printf(OLED, OLED->Width - OLED->FontWidth * 6, Page->Y, "0x%02X", Page->IntParameter);
+      OLED_Printf(OLED, OLED->Width - OLED->FontWidth * 6, Page->Y, "0x%02X", *Page->IntParameterPtr);
       break;
     case 2:
     case 3:
-      OLED_ShowImage(OLED, OLED->Width - OLED->FontWidth * 6, Page->Y, 8, 8, Page->IntParameter ? SettingImage[1] : SettingImage[0]);
+    case 4:
+      OLED_ShowImage(OLED, OLED->Width - OLED->FontWidth * 6, Page->Y, 8, 8, *Page->IntParameterPtr ? SettingImage[1] : SettingImage[0]);
       break;
     });
 }

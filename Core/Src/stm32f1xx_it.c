@@ -257,9 +257,15 @@ void USART2_IRQHandler(void)
     {
       HAL_UARTEx_ReceiveToIdle_IT(LoRa.hUARTx, LoRa.RxBuffer + LoRa.ReceiveSize, sizeof(LoRa.RxBuffer) - LoRa.ReceiveSize);
     }
-  } else
+  } else if (LoRa.Mode == LoRaModeCommunication)
   {
-    HAL_UARTEx_ReceiveToIdle_IT(LoRa.hUARTx, LoRa.RxBuffer, sizeof(LoRa.RxBuffer));
+    if (LoRa.ReceiveMessage == SET)
+    {
+      HAL_UARTEx_ReceiveToIdle_IT(LoRa.hUARTx, LoRa.RxBuffer, sizeof(LoRa.RxBuffer));
+    } else
+    {
+      HAL_UARTEx_ReceiveToIdle_IT(LoRa.hUARTx, LoRa.RxBuffer + LoRa.ReceiveSize, sizeof(LoRa.RxBuffer) - LoRa.ReceiveSize);
+    }
   }
 
   /* USER CODE END USART2_IRQn 1 */

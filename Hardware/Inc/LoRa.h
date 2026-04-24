@@ -99,6 +99,7 @@ typedef struct
 
   uint8_t ReceiveSize;
   FlagStatus ReceiveOK;
+  FlagStatus ReceiveMessage;
   uint8_t RxBuffer[128];
   uint8_t TxBuffer[128];
 
@@ -109,6 +110,8 @@ typedef struct
 void LoRa_StartIdleIT(LoRa_t *Self);
 void LoRa_Printf(LoRa_t *Self, const char *Format, ...);
 void LoRa_SendPack(LoRa_t *Self, uint8_t *Pack, uint8_t Length);
+
+void LoRa_CLearReceive(LoRa_t *Self);
 
 void LoRa_ATMode(LoRa_t *Self);
 void LoRa_CommunicationMode(LoRa_t *Self);

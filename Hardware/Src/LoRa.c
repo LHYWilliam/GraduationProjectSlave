@@ -98,6 +98,7 @@ void LoRa_CLearReceive(LoRa_t *Self)
 {
   Self->ReceiveSize = 0;
   Self->ReceiveOK = RESET;
+  Self->ReceiveMessage = RESET;
 }
 
 ErrorStatus LoRa_WaitForOK(LoRa_t *Self)

@@ -24,6 +24,35 @@
 #include "LoRa.h"
 #include "Serial.h"
 
+typedef enum
+{
+  SalveDeviceRegister,
+  MasterDeviceResponse,
+  SalveDeviceUnregister,
+  SalveDeviceUpload,
+} MessageType_t;
+
+typedef struct
+{
+  uint8_t Head;
+  MessageType_t MessageType;
+  uint8_t DeviceID;
+  uint8_t Length;
+  uint8_t *Data;
+  uint32_t Tick;
+} Message_t;
+
+typedef struct
+{
+  int32_t ID;
+  int32_t Online;
+  int32_t Upload;
+  int32_t Register;
+
+  uint8_t Connecting;
+  uint32_t LastUploadTick;
+} Controller_t;
+
 extern LED_t BoardLED;
 extern Key_t BoardKey;
 
@@ -44,6 +73,9 @@ extern uint8_t TextPageIndex;
 extern uint8_t TextPageCount;
 extern TextPage_t *TextPages[PageCount];
 
+extern Message_t Message;
+extern Controller_t Controller;
+
 void Application_Init(void);
 
 void TextPage_ShowCallback(TextPage_t *TextPage, OLED_t *OLED);
@@ -62,6 +94,8 @@ void TextPage_ChooseOptionCallback(TextPage_t **TextPage, SelectioneBar_t *Selec
 void TextPage_LoRaSettingApplyCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar);
 void TextPage_LoRaSettingReadCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar);
 void TextPage_NextPageCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar);
+void TextPage_UploadCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar);
+void TextPage_RegisterCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar);
 
 void TextPage_CursorCallback(TextPage_t *TextPage, SelectioneBar_t *SelectioneBar, RotationDirection Direction);
 
