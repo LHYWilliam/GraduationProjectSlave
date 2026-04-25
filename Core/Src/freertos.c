@@ -246,14 +246,7 @@ void LoRaRetryTaskCode(void *argument)
     if (Controller.Online && Controller.Connecting && Controller.Register == 0)
     {
       uint8_t Pack[8] = {
-          0xAA,
-          SlaveDeviceRegister,
-          0x00,
-          0x04,
-          (Controller.Connecting >> 24) & 0xFF,
-          (Controller.Connecting >> 16) & 0xFF,
-          (Controller.Connecting >> 8) & 0xFF,
-          (Controller.Connecting >> 0) & 0xFF,
+          0xAA, SlaveDeviceRegister, 0x00, 0x04, Uint32ToUint8s(Controller.Connecting),
       };
       LoRa_SendPack(&LoRa, Pack, 8);
     }
@@ -292,15 +285,11 @@ void LoRaTimerCallback(void *argument)
     if (Message.Type == MasterBroadcast)
     {
       Controller.LastBroadcastTick = osKernelGetTickCount();
-      Controller.Online = (((uint32_t) Message.Data[0] << 24) | ((uint32_t) Message.Data[1] << 16) |
-                           ((uint32_t) Message.Data[2] << 8) | ((uint32_t) Message.Data[3] << 0)) /
-                          1000;
+      Controller.Online = Uint8ArrayToUint32(Message.Data) / 1000;
 
     } else if (Message.Type == MasterDeviceResponse && Controller.Connecting)
     {
-      if (Controller.Connecting ==
-          (((uint32_t) Message.Data[0] << 24) | ((uint32_t) Message.Data[1] << 16) |
-           ((uint32_t) Message.Data[2] << 8) | ((uint32_t) Message.Data[3] << 0)))
+      if (Controller.Connecting == Uint8ArrayToUint32(Message.Data))
       {
         Controller.ID = Message.Data[4];
         Controller.Register = 1;
@@ -325,14 +314,8 @@ void LoRaTimerCallback(void *argument)
     uint16_t Sensor1PPM = (uint16_t) MQSensor_CalculateMQ2PPM(MQSensor_GetData(&MQxSensor[0]));
     uint16_t Sensor2PPM = (uint16_t) MQSensor_CalculateMQ3PPM(MQSensor_GetData(&MQxSensor[1]));
     uint8_t Pack[8] = {
-        0xAA,
-        SalveDeviceUpload,
-        Controller.ID,
-        0x04,
-        (Sensor1PPM >> 8) & 0XFF,
-        Sensor1PPM & 0XFF,
-        (Sensor2PPM >> 8) & 0xFF,
-        Sensor2PPM & 0XFF,
+        0xAA, SalveDeviceUpload,          Controller.ID,
+        0x04, Uint16ToUint8s(Sensor1PPM), Uint16ToUint8s(Sensor2PPM),
     };
     LoRa_SendPack(&LoRa, Pack, 8);
   }

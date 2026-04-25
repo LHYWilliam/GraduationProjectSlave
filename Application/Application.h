@@ -24,6 +24,17 @@
 #include "LoRa.h"
 #include "Serial.h"
 
+#define Uint8sToUint32(Data1, Data2, Data3, Data4)                                                 \
+  (((uint32_t) (Data1) << 24) | ((uint32_t) (Data2) << 16) | ((uint32_t) (Data3) << 8) |           \
+   ((uint32_t) (Data4) << 0))
+
+#define Uint8ArrayToUint32(Datas) (Uint8sToUint32((Datas)[0], (Datas)[1], (Datas)[2], (Datas)[3]))
+
+#define Uint16ToUint8s(Data) ((Data) >> 8) & 0xFF, ((Data) >> 0) & 0xFF
+
+#define Uint32ToUint8s(Data)                                                                       \
+  ((Data) >> 24) & 0xFF, ((Data) >> 16) & 0xFF, ((Data) >> 8) & 0xFF, ((Data) >> 0) & 0xFF
+
 typedef enum
 {
   MasterBroadcast,
