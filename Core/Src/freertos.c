@@ -19,8 +19,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "FreeRTOS.h"
-#include "LoRa.h"
-#include "cmsis_os2.h"
 #include "task.h"
 #include "main.h"
 #include "cmsis_os.h"
@@ -65,14 +63,19 @@ const osThreadAttr_t OLEDInteraction_attributes = {
     .stack_size = 128 * 4,
     .priority = (osPriority_t) osPriorityHigh,
 };
+/* Definitions for LoRaRetryTask */
+osThreadId_t LoRaRetryTaskHandle;
+const osThreadAttr_t LoRaRetryTask_attributes = {
+    .name = "LoRaRetryTask",
+    .stack_size = 128 * 4,
+    .priority = (osPriority_t) osPriorityNormal,
+};
 /* Definitions for LEDTimer */
 osTimerId_t LEDTimerHandle;
-const osTimerAttr_t LEDTimer_attributes = {
-    .name = "LEDTimer"};
+const osTimerAttr_t LEDTimer_attributes = {.name = "LEDTimer"};
 /* Definitions for LoRaTimer */
 osTimerId_t LoRaTimerHandle;
-const osTimerAttr_t LoRaTimer_attributes = {
-    .name = "LoRaTimer"};
+const osTimerAttr_t LoRaTimer_attributes = {.name = "LoRaTimer"};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -85,6 +88,7 @@ void Encoder_Test(void);
 
 void OLEDFlushTaskCode(void *argument);
 void OLEDInteractionTaskCode(void *argument);
+void LoRaRetryTaskCode(void *argument);
 void LEDTimerCallback(void *argument);
 void LoRaTimerCallback(void *argument);
 
@@ -134,6 +138,9 @@ void MX_FREERTOS_Init(void)
 
   /* creation of OLEDInteraction */
   OLEDInteractionHandle = osThreadNew(OLEDInteractionTaskCode, NULL, &OLEDInteraction_attributes);
+
+  /* creation of LoRaRetryTask */
+  LoRaRetryTaskHandle = osThreadNew(LoRaRetryTaskCode, NULL, &LoRaRetryTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -220,6 +227,42 @@ void OLEDInteractionTaskCode(void *argument)
   /* USER CODE END OLEDInteractionTaskCode */
 }
 
+/* USER CODE BEGIN Header_LoRaRetryTaskCode */
+/**
+* @brief Function implementing the LoRaRetryTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_LoRaRetryTaskCode */
+void LoRaRetryTaskCode(void *argument)
+{
+  /* USER CODE BEGIN LoRaRetryTaskCode */
+  /* Infinite loop */
+
+  UNUSED(argument);
+
+  for (;;)
+  {
+    if (Controller.Online && Controller.Connecting && Controller.Register == 0)
+    {
+      uint8_t Pack[8] = {
+          0xAA,
+          SlaveDeviceRegister,
+          0x00,
+          0x04,
+          (Controller.Connecting >> 24) & 0xFF,
+          (Controller.Connecting >> 16) & 0xFF,
+          (Controller.Connecting >> 8) & 0xFF,
+          (Controller.Connecting >> 0) & 0xFF,
+      };
+      LoRa_SendPack(&LoRa, Pack, 8);
+    }
+
+    osDelay(1000);
+  }
+  /* USER CODE END LoRaRetryTaskCode */
+}
+
 /* LEDTimerCallback function */
 void LEDTimerCallback(void *argument)
 {
@@ -246,35 +289,60 @@ void LoRaTimerCallback(void *argument)
 
   if (LoRa.ReceiveMessage)
   {
-    if (Message.MessageType == MasterDeviceResponse && Controller.Connecting)
+    if (Message.Type == MasterBroadcast)
     {
-      Controller.ID = Message.Data[0];
-      Controller.Online = 1;
-      Controller.Register = 1;
-      Controller.Connecting = 0;
-    } else if (Message.MessageType == SalveDeviceUnregister && Controller.Online)
+      Controller.LastBroadcastTick = osKernelGetTickCount();
+      Controller.Online = (((uint32_t) Message.Data[0] << 24) | ((uint32_t) Message.Data[1] << 16) |
+                           ((uint32_t) Message.Data[2] << 8) | ((uint32_t) Message.Data[3] << 0)) /
+                          1000;
+
+    } else if (Message.Type == MasterDeviceResponse && Controller.Connecting)
     {
-      if (Controller.ID == Message.Data[0])
+      if (Controller.Connecting ==
+          (((uint32_t) Message.Data[0] << 24) | ((uint32_t) Message.Data[1] << 16) |
+           ((uint32_t) Message.Data[2] << 8) | ((uint32_t) Message.Data[3] << 0)))
       {
-        Controller.ID = 0;
-        Controller.Online = 0;
-        Controller.Upload = 0;
-        Controller.Register = 0;
+        Controller.ID = Message.Data[4];
+        Controller.Register = 1;
+        Controller.Connecting = 0;
       }
+    } else if (Message.Type == SalveDeviceLogOut && Controller.ID == Message.Data[0])
+    {
+
+      Controller.ID = 0;
+      Controller.Upload = 0;
+      Controller.Register = 0;
     }
 
     LoRa_CLearReceive(&LoRa);
   }
 
-  if (Controller.Online && Controller.Upload && (osKernelGetTickCount() - Controller.LastUploadTick) >= 1000)
+  if (Controller.Online && Controller.Register && Controller.Upload &&
+      (osKernelGetTickCount() - Controller.LastUploadTick) >= 1000)
   {
     Controller.LastUploadTick = osKernelGetTickCount();
 
     uint16_t Sensor1PPM = (uint16_t) MQSensor_CalculateMQ2PPM(MQSensor_GetData(&MQxSensor[0]));
     uint16_t Sensor2PPM = (uint16_t) MQSensor_CalculateMQ3PPM(MQSensor_GetData(&MQxSensor[1]));
-    uint8_t Pack[8] = {0xAA, SalveDeviceUpload, Controller.ID, 0x02, (Sensor1PPM >> 8) & 0XFF, Sensor1PPM & 0XFF, (Sensor2PPM >> 8) & 0xFF, Sensor2PPM & 0XFF};
-
+    uint8_t Pack[8] = {
+        0xAA,
+        SalveDeviceUpload,
+        Controller.ID,
+        0x04,
+        (Sensor1PPM >> 8) & 0XFF,
+        Sensor1PPM & 0XFF,
+        (Sensor2PPM >> 8) & 0xFF,
+        Sensor2PPM & 0XFF,
+    };
     LoRa_SendPack(&LoRa, Pack, 8);
+  }
+
+  if (osKernelGetTickCount() - Controller.LastBroadcastTick > 10000)
+  {
+    Controller.ID = 0;
+    Controller.Online = 0;
+    Controller.Upload = 0;
+    Controller.Register = 0;
   }
 
   /* USER CODE END LoRaTimerCallback */
@@ -282,77 +350,5 @@ void LoRaTimerCallback(void *argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
-
-void OLED_Test(void)
-{
-  static int X = 0, Y = 0;
-
-  X = 0, Y = 0;
-
-  while (X < OLED.Width - 1)
-  {
-    OLED_ClearBuffer(&OLED);
-    OLED_DrawLine(&OLED, 64, 32, X, Y);
-    OLED_SendBuffer(&OLED);
-    X++;
-
-    osDelay(1);
-  }
-
-  while (Y < OLED.Height - 1)
-  {
-    OLED_ClearBuffer(&OLED);
-    OLED_DrawLine(&OLED, 64, 32, X, Y);
-    OLED_SendBuffer(&OLED);
-    Y++;
-
-    osDelay(1);
-  }
-
-  while (X > 0)
-  {
-    OLED_ClearBuffer(&OLED);
-    OLED_DrawLine(&OLED, 64, 32, X, Y);
-    OLED_SendBuffer(&OLED);
-    X--;
-
-    osDelay(1);
-  }
-
-  while (Y > 0)
-  {
-    OLED_ClearBuffer(&OLED);
-    OLED_DrawLine(&OLED, 64, 32, X, Y);
-    OLED_SendBuffer(&OLED);
-    Y--;
-
-    osDelay(1);
-  }
-}
-
-void Sampler_Test(void)
-{
-  float Voltage1 = Sampler.Buffer[0] * 3.3 / 4095., Voltage2 = Sampler.Buffer[1] * 3.3 / 4095.;
-  Serial_Printf(&Serial, "[%.3f %.3f]\r\n", Voltage1, Voltage2);
-
-  osDelay(100);
-}
-
-void Encoder_Test(void)
-{
-  if (Key_IsPressing(&EncoderKey))
-  {
-    LED_On(&BoardLED);
-  } else
-  {
-    LED_Off(&BoardLED);
-  }
-
-  int16_t Speed = Encoder_GetSpeed(&Encoder);
-  uint16_t Count = Encoder_GetCount(&Encoder);
-  Serial_Printf(&Serial, "[Count, Speed]: [%d, %d]\r\n", Count, Speed);
-
-  osDelay(100);
-}
 
 /* USER CODE END Application */

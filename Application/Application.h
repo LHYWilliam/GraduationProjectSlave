@@ -26,16 +26,17 @@
 
 typedef enum
 {
-  SalveDeviceRegister,
+  MasterBroadcast,
+  SlaveDeviceRegister,
   MasterDeviceResponse,
-  SalveDeviceUnregister,
+  SalveDeviceLogOut,
   SalveDeviceUpload,
 } MessageType_t;
 
 typedef struct
 {
   uint8_t Head;
-  MessageType_t MessageType;
+  MessageType_t Type;
   uint8_t DeviceID;
   uint8_t Length;
   uint8_t *Data;
@@ -49,8 +50,9 @@ typedef struct
   int32_t Upload;
   int32_t Register;
 
-  uint8_t Connecting;
+  uint32_t Connecting;
   uint32_t LastUploadTick;
+  uint32_t LastBroadcastTick;
 } Controller_t;
 
 extern LED_t BoardLED;

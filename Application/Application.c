@@ -74,17 +74,18 @@ LoRa_t LoRa = {
     .AUX_Pin = LoRaAUX_Pin,
     .MD0_Port = LoRaMD0_GPIO_Port,
     .MD0_Pin = LoRaMD0_Pin,
-    .Config = {
-        .BaudRate = LoRaBaudRate115200,
-        .Parity = LoRaParityNone,
-        .Address = 0x0000,
-        .Channel = 23,
-        .WLRate = LoRaWLRate19_2Kbps,
-        .TPower = LoRaTPower20dBm,
-        .WLTime = LoRaWLTime1s,
-        .TMode = LoRaTModeTransparentTransmission,
-        .CWMode = LoRaCWModeNormal,
-    },
+    .Config =
+        {
+            .BaudRate = LoRaBaudRate115200,
+            .Parity = LoRaParityNone,
+            .Address = 0x0000,
+            .Channel = 23,
+            .WLRate = LoRaWLRate19_2Kbps,
+            .TPower = LoRaTPower20dBm,
+            .WLTime = LoRaWLTime1s,
+            .TMode = LoRaTModeTransparentTransmission,
+            .CWMode = LoRaCWModeNormal,
+        },
 };
 
 #define PageCount 4
@@ -209,7 +210,8 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 
     if (LoRa.Mode == LoRaModeAT)
     {
-      if (LoRa.ReceiveSize >= 4 && strncmp((char *) &LoRa.RxBuffer[LoRa.ReceiveSize - 4], "OK\r\n", 4) == 0)
+      if (LoRa.ReceiveSize >= 4 &&
+          strncmp((char *) &LoRa.RxBuffer[LoRa.ReceiveSize - 4], "OK\r\n", 4) == 0)
       {
         LoRa.RxBuffer[LoRa.ReceiveSize] = '\0';
         LoRa.ReceiveOK = SET;
@@ -219,10 +221,11 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
       }
     } else if (LoRa.Mode == LoRaModeCommunication)
     {
-      if (LoRa.RxBuffer[0] == 0xAA && LoRa.ReceiveSize >= 4 && LoRa.ReceiveSize == (4 + LoRa.RxBuffer[3] * 2))
+      if (LoRa.RxBuffer[0] == 0xAA && LoRa.ReceiveSize >= 4 &&
+          LoRa.ReceiveSize == (4 + LoRa.RxBuffer[3]))
       {
         Message.Head = LoRa.RxBuffer[0];
-        Message.MessageType = LoRa.RxBuffer[1];
+        Message.Type = LoRa.RxBuffer[1];
         Message.DeviceID = LoRa.RxBuffer[2];
         Message.Length = LoRa.RxBuffer[3];
         Message.Data = &LoRa.RxBuffer[4];

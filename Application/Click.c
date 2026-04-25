@@ -1,5 +1,8 @@
 #include "Application.h"
-#include "stm32f1xx_hal_def.h"
+
+extern osThreadId_t LoRaRetryTaskHandle;
+extern void LoRaRetryTaskCode(void *argument);
+extern const osThreadAttr_t LoRaRetryTask_attributes;
 
 void TextPage_BackCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar)
 {
@@ -76,12 +79,8 @@ void TextPage_RegisterCallback(TextPage_t **TextPage, SelectioneBar_t *Selection
   UNUSED(TextPage);
   UNUSED(SelectioneBar);
 
-  if (Controller.Register == 0)
+  if (Controller.Online && Controller.Register == 0 && Controller.Connecting == 0)
   {
-    Controller.Connecting = 1;
-
-    uint8_t Pack[4] = {0xAA, SalveDeviceRegister, 0x00, 0x00};
-
-    LoRa_SendPack(&LoRa, Pack, 4);
+    Controller.Connecting = Controller.Online;
   }
 }

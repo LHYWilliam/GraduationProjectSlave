@@ -2,16 +2,13 @@
 
 void TextPage_ShowCallback(TextPage_t *TextPage, OLED_t *OLED)
 {
-  ShowTitleAndTexts(
-      OLED_Printf(OLED, Page->X, Page->Y, Page->Title););
+  ShowTitleAndTexts(OLED_Printf(OLED, Page->X, Page->Y, Page->Title););
 }
 
 void TextPage_ShowMQxPageCallback(TextPage_t *TextPage, OLED_t *OLED)
 {
   ShowTitleAndTexts(
-      if (Page->Index == 0) {
-        OLED_Printf(OLED, Page->X, Page->Y, Page->Title);
-      } else {
+      if (Page->Index == 0) { OLED_Printf(OLED, Page->X, Page->Y, Page->Title); } else {
         OLED_Printf(OLED, Page->X, Page->Y, Page->Title);
 
         uint16_t ADCValue = MQSensor_GetData(&MQxSensor[Page->Index - 1]);
@@ -35,12 +32,8 @@ void TextPage_ShowMQPageCallback(TextPage_t *TextPage, OLED_t *OLED)
   TextPage_t *Page = TextPage->HeadPage;
 
   OLED_Printf(OLED, Page->X, Page->Y, Page->Title);
-  OLED_Printf(
-      OLED,
-      Page->X + OLED->FontWidth * 2,
-      Page->Y,
-      "%s %s",
-      TextPage->Title, MQxSensor[Index].State ? "Safe" : "Danger");
+  OLED_Printf(OLED, Page->X + OLED->FontWidth * 2, Page->Y, "%s %s", TextPage->Title,
+              MQxSensor[Index].State ? "Safe" : "Danger");
 
   uint16_t ADCValue = MQSensor_GetData(&MQxSensor[Index]);
   uint16_t PPM;
@@ -53,51 +46,40 @@ void TextPage_ShowMQPageCallback(TextPage_t *TextPage, OLED_t *OLED)
     PPM = MQSensor_CalculateMQ3PPM(ADCValue);
   }
 
-  OLED_Printf(
-      OLED,
-      Page->X,
-      OLED->Height - OLED->FontHeight,
-      "%d PPM",
-      PPM);
+  OLED_Printf(OLED, Page->X, OLED->Height - OLED->FontHeight, "%d PPM", PPM);
 
   Page = Page->DownPage;
 
-  OLED_DrawChart(
-      OLED,
-      Page->TitleX, Page->TitleY,
-      Page->TitleWidth, Page->TitleHeight,
-      MQxSensor[Index].Data,
-      MQxSensor[Index].Length,
-      MQxSensor[Index].Index);
+  OLED_DrawChart(OLED, Page->TitleX, Page->TitleY, Page->TitleWidth, Page->TitleHeight,
+                 MQxSensor[Index].Data, MQxSensor[Index].Length, MQxSensor[Index].Index);
 
   OLED_DrawHLine(
-      OLED,
-      Page->TitleX,
+      OLED, Page->TitleX,
       Normalization(4095 - MQxSensor[Index].Threshold, 4095, Page->TitleHeight - 1, Page->TitleY),
-      Page->TitleWidth,
-      2);
+      Page->TitleWidth, 2);
 }
 
 void TextPage_ShowOptionPageCallback(TextPage_t *TextPage, OLED_t *OLED)
 {
-  ShowTitleAndTexts(
-      OLED_Printf(OLED, Page->X, Page->Y, Page->Title);
+  ShowTitleAndTexts(OLED_Printf(OLED, Page->X, Page->Y, Page->Title);
 
-      if (Page->Index > 0) {
-        OLED_DrawHollowRectangle(OLED, OLED->Width - 16, Page->Y, 8, 8, 1);
-        if (*TextPage->IntParameterPtr == Page->Index)
-        {
-          OLED_DrawSolidRectangle(OLED, OLED->Width - 16 + 2, Page->Y + 2, 4, 4);
-        }
-      });
+                    if (Page->Index > 0) {
+                      OLED_DrawHollowRectangle(OLED, OLED->Width - 16, Page->Y, 8, 8, 1);
+                      if (*TextPage->IntParameterPtr == Page->Index)
+                      {
+                        OLED_DrawSolidRectangle(OLED, OLED->Width - 16 + 2, Page->Y + 2, 4, 4);
+                      }
+                    });
 }
 
 void TextPage_ShowDialogCallback(TextPage_t *TextPage, OLED_t *OLED)
 {
   TextPage->UpperPage->ShowCallback(TextPage->UpperPage, OLED);
 
-  OLED_ClearBufferArea(OLED, TextPage->TitleX, TextPage->TitleY, TextPage->TitleWidth, TextPage->TitleHeight);
-  OLED_DrawHollowRectangle(OLED, TextPage->TitleX, TextPage->TitleY, TextPage->TitleWidth, TextPage->TitleHeight, 1);
+  OLED_ClearBufferArea(OLED, TextPage->TitleX, TextPage->TitleY, TextPage->TitleWidth,
+                       TextPage->TitleHeight);
+  OLED_DrawHollowRectangle(OLED, TextPage->TitleX, TextPage->TitleY, TextPage->TitleWidth,
+                           TextPage->TitleHeight, 1);
 
   for (TextPage_t *Page = TextPage->HeadPage; Page != NULL; Page = Page->DownPage)
   {
@@ -120,12 +102,22 @@ void TextPage_ShowLoRaPage(TextPage_t *TextPage, OLED_t *OLED)
     
     switch (Page->Index) {
     case 1:
-      OLED_Printf(OLED, OLED->Width - OLED->FontWidth * 6, Page->Y, "0x%02X", *Page->IntParameterPtr);
+      OLED_Printf(OLED, OLED->Width - OLED->FontWidth * 6, Page->Y, "0x%02X",
+                  *Page->IntParameterPtr);
       break;
     case 2:
+      if (*Page->IntParameterPtr == 0)
+      {
+        OLED_ShowImage(OLED, OLED->Width - OLED->FontWidth * 6, Page->Y, 8, 8, SettingImage[0]);
+      } else
+      {
+        OLED_Printf(OLED, OLED->Width - OLED->FontWidth * 6, Page->Y, "%d", *Page->IntParameterPtr);
+      }
+      break;
     case 3:
     case 4:
-      OLED_ShowImage(OLED, OLED->Width - OLED->FontWidth * 6, Page->Y, 8, 8, *Page->IntParameterPtr ? SettingImage[1] : SettingImage[0]);
+      OLED_ShowImage(OLED, OLED->Width - OLED->FontWidth * 6, Page->Y, 8, 8,
+                     *Page->IntParameterPtr ? SettingImage[1] : SettingImage[0]);
       break;
     });
 }
