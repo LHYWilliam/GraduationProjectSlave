@@ -5,6 +5,7 @@
 
 #include "cmsis_os.h"
 #include "adc.h"
+#include "crc.h"
 #include "dma.h"
 #include "i2c.h"
 #include "tim.h"
@@ -38,10 +39,11 @@
 typedef enum
 {
   MasterBroadcast,
-  SlaveDeviceRegister,
-  MasterDeviceResponse,
-  SalveDeviceLogOut,
-  SalveDeviceUpload,
+  SlaveRegister,
+  SlaveRegisterAck,
+  SlaveHeartbeat,
+  SlaveUpload,
+  SlaveLogout,
 } MessageType_t;
 
 typedef struct
@@ -57,13 +59,14 @@ typedef struct
 typedef struct
 {
   int32_t ID;
-  int32_t Online;
+  // int32_t Online;
   int32_t Upload;
   int32_t Register;
 
-  uint32_t Connecting;
+  uint32_t UID;
+  uint8_t Connecting;
+  uint32_t LastHeartBeatTick;
   uint32_t LastUploadTick;
-  uint32_t LastBroadcastTick;
 } Controller_t;
 
 extern LED_t BoardLED;

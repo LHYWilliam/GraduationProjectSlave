@@ -51,15 +51,11 @@ MQSensor_t MQxSensor[2] = {
     {
         .Data = MQ2Data,
         .Length = MQ2DataLength,
-        .A = 574.25,
-        .B = -2.222,
         .Threshold,
     },
     {
         .Data = MQ3Data,
         .Length = MQ3DataLength,
-        .A = 0.4091,
-        .B = 0.652,
         .Threshold,
     },
 };
@@ -171,11 +167,6 @@ void Application_Init(void)
     IDPage.RotationCallback = TextPage_CursorCallback;
     TextPage_AddLowerPage(&LoRaPage, &IDPage);
 
-    static TextPage_t OnlinePage = TextPage_EmptyPage("Online");
-    OnlinePage.IntParameterPtr = &Controller.Online;
-    OnlinePage.RotationCallback = TextPage_CursorCallback;
-    TextPage_AddLowerPage(&LoRaPage, &OnlinePage);
-
     static TextPage_t UploadPage = TextPage_EmptyPage("Upload");
     UploadPage.IntParameterPtr = &Controller.Upload;
     UploadPage.ClickCallback = TextPage_UploadCallback;
@@ -200,6 +191,8 @@ void Application_Init(void)
     TextPage_Init(TextPages[i], &OLED);
   }
   SelectioneBar_BindTextPage(&SelectioneBar, TextPages[0]->HeadPage);
+
+  Controller.UID = HAL_CRC_Calculate(&hcrc, (uint32_t *) UID_BASE, 3);
 }
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)

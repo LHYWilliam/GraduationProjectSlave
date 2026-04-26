@@ -79,8 +79,8 @@ void TextPage_RegisterCallback(TextPage_t **TextPage, SelectioneBar_t *Selection
   UNUSED(TextPage);
   UNUSED(SelectioneBar);
 
-  if (Controller.Online && Controller.Register == 0 && Controller.Connecting == 0)
+  if (Controller.Register == 0 && Controller.Connecting == 0)
   {
-    Controller.Connecting = Controller.Online;
+    Controller.Connecting = 1;
   }
 }

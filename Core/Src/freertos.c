@@ -27,7 +27,6 @@
 /* USER CODE BEGIN Includes */
 
 #include "Application.h"
-
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -80,9 +79,8 @@ const osTimerAttr_t LoRaTimer_attributes = {.name = "LoRaTimer"};
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
 
-void OLED_Test(void);
-void Sampler_Test(void);
-void Encoder_Test(void);
+void SlaveHeartbeat_Handler(void);
+void SlaveUpload_Handler(void);
 
 /* USER CODE END FunctionPrototypes */
 
@@ -243,10 +241,10 @@ void LoRaRetryTaskCode(void *argument)
 
   for (;;)
   {
-    if (Controller.Online && Controller.Connecting && Controller.Register == 0)
+    if (Controller.Connecting && Controller.Register == 0)
     {
       uint8_t Pack[8] = {
-          0xAA, SlaveDeviceRegister, 0x00, 0x04, Uint32ToUint8s(Controller.Connecting),
+          0xAA, SlaveRegister, 0x00, 0x04, Uint32ToUint8s(Controller.UID),
       };
       LoRa_SendPack(&LoRa, Pack, 8);
     }
@@ -282,56 +280,79 @@ void LoRaTimerCallback(void *argument)
 
   if (LoRa.ReceiveMessage)
   {
-    if (Message.Type == MasterBroadcast)
+    if (Message.Type == SlaveRegisterAck)
     {
-      Controller.LastBroadcastTick = osKernelGetTickCount();
-      Controller.Online = Uint8ArrayToUint32(Message.Data) / 1000;
-
-    } else if (Message.Type == MasterDeviceResponse && Controller.Connecting)
-    {
-      if (Controller.Connecting == Uint8ArrayToUint32(Message.Data))
+      if (Controller.Connecting)
       {
-        Controller.ID = Message.Data[4];
-        Controller.Register = 1;
-        Controller.Connecting = 0;
-      }
-    } else if (Message.Type == SalveDeviceLogOut && Controller.ID == Message.Data[0])
-    {
+        uint32_t UID = Uint8ArrayToUint32(Message.Data);
 
-      Controller.ID = 0;
-      Controller.Upload = 0;
-      Controller.Register = 0;
+        if (Controller.UID == UID)
+        {
+          Controller.ID = Message.Data[4];
+          Controller.Register = 1;
+          Controller.Connecting = 0;
+        }
+      }
+    } else if (Message.Type == SlaveLogout)
+    {
+      uint8_t DeviceID = Message.Data[0];
+
+      if (Controller.ID == DeviceID)
+      {
+        Controller.ID = 0;
+        Controller.Upload = 0;
+        Controller.Register = 0;
+      }
     }
 
     LoRa_CLearReceive(&LoRa);
   }
 
-  if (Controller.Online && Controller.Register && Controller.Upload &&
-      (osKernelGetTickCount() - Controller.LastUploadTick) >= 1000)
-  {
-    Controller.LastUploadTick = osKernelGetTickCount();
+  SlaveHeartbeat_Handler();
 
-    uint16_t Sensor1PPM = (uint16_t) MQSensor_CalculateMQ2PPM(MQSensor_GetData(&MQxSensor[0]));
-    uint16_t Sensor2PPM = (uint16_t) MQSensor_CalculateMQ3PPM(MQSensor_GetData(&MQxSensor[1]));
-    uint8_t Pack[8] = {
-        0xAA, SalveDeviceUpload,          Controller.ID,
-        0x04, Uint16ToUint8s(Sensor1PPM), Uint16ToUint8s(Sensor2PPM),
-    };
-    LoRa_SendPack(&LoRa, Pack, 8);
-  }
-
-  if (osKernelGetTickCount() - Controller.LastBroadcastTick > 10000)
-  {
-    Controller.ID = 0;
-    Controller.Online = 0;
-    Controller.Upload = 0;
-    Controller.Register = 0;
-  }
+  SlaveUpload_Handler();
 
   /* USER CODE END LoRaTimerCallback */
 }
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
+
+void SlaveHeartbeat_Handler(void)
+{
+  if (Controller.Register && osKernelGetTickCount() - Controller.LastHeartBeatTick > 5000)
+  {
+    Controller.LastHeartBeatTick = osKernelGetTickCount();
+
+    uint8_t Pack[4] = {
+        0xAA,
+        SlaveHeartbeat,
+        Controller.ID,
+        0x00,
+    };
+    LoRa_SendPack(&LoRa, Pack, 4);
+  }
+}
+
+void SlaveUpload_Handler(void)
+{
+  if (Controller.Register && Controller.Upload &&
+      (osKernelGetTickCount() - Controller.LastUploadTick) > 1000)
+  {
+    Controller.LastUploadTick = osKernelGetTickCount();
+
+    uint16_t Sensor1PPM = (uint16_t) MQSensor_CalculateMQ2PPM(MQSensor_GetData(&MQxSensor[0]));
+    uint16_t Sensor2PPM = (uint16_t) MQSensor_CalculateMQ3PPM(MQSensor_GetData(&MQxSensor[1]));
+    uint8_t Pack[8] = {
+        0xAA,
+        SlaveUpload,
+        Controller.ID,
+        0x04,
+        Uint16ToUint8s(Sensor1PPM),
+        Uint16ToUint8s(Sensor2PPM),
+    };
+    LoRa_SendPack(&LoRa, Pack, 8);
+  }
+}
 
 /* USER CODE END Application */

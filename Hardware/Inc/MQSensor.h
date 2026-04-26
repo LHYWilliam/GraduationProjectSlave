@@ -20,9 +20,6 @@ typedef struct
   uint16_t Threshold;
   uint16_t Relaxation;
   MQSensor_State State;
-
-  float A;
-  float B;
 } MQSensor_t;
 
 void MQSensor_Update(MQSensor_t *Self, uint16_t Data);

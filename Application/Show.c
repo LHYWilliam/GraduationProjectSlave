@@ -106,16 +106,7 @@ void TextPage_ShowLoRaPage(TextPage_t *TextPage, OLED_t *OLED)
                   *Page->IntParameterPtr);
       break;
     case 2:
-      if (*Page->IntParameterPtr == 0)
-      {
-        OLED_ShowImage(OLED, OLED->Width - OLED->FontWidth * 6, Page->Y, 8, 8, SettingImage[0]);
-      } else
-      {
-        OLED_Printf(OLED, OLED->Width - OLED->FontWidth * 6, Page->Y, "%d", *Page->IntParameterPtr);
-      }
-      break;
     case 3:
-    case 4:
       OLED_ShowImage(OLED, OLED->Width - OLED->FontWidth * 6, Page->Y, 8, 8,
                      *Page->IntParameterPtr ? SettingImage[1] : SettingImage[0]);
       break;
