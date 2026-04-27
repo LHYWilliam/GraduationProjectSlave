@@ -88,8 +88,9 @@ LoRa_t LoRa = {
 uint8_t TextPageIndex, TextPageCount = PageCount;
 TextPage_t *TextPages[PageCount];
 
-Message_t Message;
 Controller_t Controller;
+
+extern osMessageQueueId_t LoRaMessageQueueHandle;
 
 void OLED_Info(OLED_t *OLED, char *Message)
 {
@@ -207,7 +208,9 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
           strncmp((char *) &LoRa.RxBuffer[LoRa.ReceiveSize - 4], "OK\r\n", 4) == 0)
       {
         LoRa.RxBuffer[LoRa.ReceiveSize] = '\0';
+
         LoRa.ReceiveOK = SET;
+        LoRa.ReceiveSize = 0;
       } else
       {
         LoRa.ReceiveOK = RESET;
@@ -217,20 +220,23 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
       if (LoRa.RxBuffer[0] == 0xAA && LoRa.ReceiveSize >= 4 &&
           LoRa.ReceiveSize == (4 + LoRa.RxBuffer[3]))
       {
+        Message_t Message;
         Message.Head = LoRa.RxBuffer[0];
         Message.Type = LoRa.RxBuffer[1];
         Message.DeviceID = LoRa.RxBuffer[2];
         Message.Length = LoRa.RxBuffer[3];
-        Message.Data = &LoRa.RxBuffer[4];
+        for (uint8_t i = 0; i < Message.Length; i++)
+        {
+          Message.Data[i] = LoRa.RxBuffer[4 + i];
+        }
         Message.Tick = osKernelGetTickCount();
+        osMessageQueuePut(LoRaMessageQueueHandle, &Message, 0, 0);
 
-        LoRa.ReceiveMessage = SET;
-      } else if (LoRa.RxBuffer[0] != 0xAA || LoRa.ReceiveSize >= 64)
+        LoRa.ReceiveSize = 0;
+      } else if (LoRa.RxBuffer[0] != 0xAA || (LoRa.RxBuffer[0] == 0xAA && LoRa.ReceiveSize >= 4 &&
+                                              LoRa.ReceiveSize > (4 + LoRa.RxBuffer[3])))
       {
-        LoRa_CLearReceive(&LoRa);
-      } else
-      {
-        LoRa.ReceiveMessage = RESET;
+        LoRa.ReceiveSize = 0;
       }
     }
   }

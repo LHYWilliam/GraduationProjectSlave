@@ -62,23 +62,26 @@ const osThreadAttr_t OLEDInteraction_attributes = {
     .stack_size = 128 * 4,
     .priority = (osPriority_t) osPriorityHigh,
 };
-/* Definitions for LoRaRetryTask */
-osThreadId_t LoRaRetryTaskHandle;
-const osThreadAttr_t LoRaRetryTask_attributes = {
-    .name = "LoRaRetryTask",
+/* Definitions for LoRaTask */
+osThreadId_t LoRaTaskHandle;
+const osThreadAttr_t LoRaTask_attributes = {
+    .name = "LoRaTask",
     .stack_size = 128 * 4,
-    .priority = (osPriority_t) osPriorityNormal,
+    .priority = (osPriority_t) osPriorityRealtime,
 };
+/* Definitions for LoRaMessageQueue */
+osMessageQueueId_t LoRaMessageQueueHandle;
+const osMessageQueueAttr_t LoRaMessageQueue_attributes = {.name = "LoRaMessageQueue"};
 /* Definitions for LEDTimer */
 osTimerId_t LEDTimerHandle;
 const osTimerAttr_t LEDTimer_attributes = {.name = "LEDTimer"};
-/* Definitions for LoRaTimer */
-osTimerId_t LoRaTimerHandle;
-const osTimerAttr_t LoRaTimer_attributes = {.name = "LoRaTimer"};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
 
+void SlaveRegisterAck_Handler(Message_t *Message);
+void SlaveLogout_Handler(Message_t *Message);
+void SlaveRegisterRetry_Handler(void);
 void SlaveHeartbeat_Handler(void);
 void SlaveUpload_Handler(void);
 
@@ -86,9 +89,8 @@ void SlaveUpload_Handler(void);
 
 void OLEDFlushTaskCode(void *argument);
 void OLEDInteractionTaskCode(void *argument);
-void LoRaRetryTaskCode(void *argument);
+void StartLoRaTask(void *argument);
 void LEDTimerCallback(void *argument);
-void LoRaTimerCallback(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -115,16 +117,16 @@ void MX_FREERTOS_Init(void)
   /* creation of LEDTimer */
   LEDTimerHandle = osTimerNew(LEDTimerCallback, osTimerPeriodic, NULL, &LEDTimer_attributes);
 
-  /* creation of LoRaTimer */
-  LoRaTimerHandle = osTimerNew(LoRaTimerCallback, osTimerPeriodic, NULL, &LoRaTimer_attributes);
-
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
 
   osTimerStart(LEDTimerHandle, 100);
-  osTimerStart(LoRaTimerHandle, 10);
 
   /* USER CODE END RTOS_TIMERS */
+
+  /* Create the queue(s) */
+  /* creation of LoRaMessageQueue */
+  LoRaMessageQueueHandle = osMessageQueueNew(16, sizeof(Message_t), &LoRaMessageQueue_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -137,8 +139,8 @@ void MX_FREERTOS_Init(void)
   /* creation of OLEDInteraction */
   OLEDInteractionHandle = osThreadNew(OLEDInteractionTaskCode, NULL, &OLEDInteraction_attributes);
 
-  /* creation of LoRaRetryTask */
-  LoRaRetryTaskHandle = osThreadNew(LoRaRetryTaskCode, NULL, &LoRaRetryTask_attributes);
+  /* creation of LoRaTask */
+  LoRaTaskHandle = osThreadNew(StartLoRaTask, NULL, &LoRaTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -181,7 +183,7 @@ void OLEDFlushTaskCode(void *argument)
 
     OLED_SendBuffer(&OLED);
 
-    osDelay(1);
+    osDelay(10);
   }
   /* USER CODE END OLEDFlushTaskCode */
 }
@@ -225,33 +227,51 @@ void OLEDInteractionTaskCode(void *argument)
   /* USER CODE END OLEDInteractionTaskCode */
 }
 
-/* USER CODE BEGIN Header_LoRaRetryTaskCode */
+/* USER CODE BEGIN Header_StartLoRaTask */
 /**
-* @brief Function implementing the LoRaRetryTask thread.
+* @brief Function implementing the LoRaTask thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_LoRaRetryTaskCode */
-void LoRaRetryTaskCode(void *argument)
+/* USER CODE END Header_StartLoRaTask */
+void StartLoRaTask(void *argument)
 {
-  /* USER CODE BEGIN LoRaRetryTaskCode */
-  /* Infinite loop */
+  /* USER CODE BEGIN StartLoRaTask */
 
   UNUSED(argument);
 
+  /* Infinite loop */
+
   for (;;)
   {
-    if (Controller.Connecting && Controller.Register == 0)
+    if (LoRa.Mode != LoRaModeCommunication)
     {
-      uint8_t Pack[8] = {
-          0xAA, SlaveRegister, 0x00, 0x04, Uint32ToUint8s(Controller.UID),
-      };
-      LoRa_SendPack(&LoRa, Pack, 8);
+      osDelay(10);
+      continue;
     }
 
-    osDelay(1000);
+    Message_t Message;
+    while (osMessageQueueGet(LoRaMessageQueueHandle, &Message, 0, 0) == osOK)
+    {
+      if (Message.Type == SlaveRegisterAck)
+      {
+        SlaveRegisterAck_Handler(&Message);
+
+      } else if (Message.Type == SlaveLogout)
+      {
+        SlaveLogout_Handler(&Message);
+      }
+    }
+
+    SlaveRegisterRetry_Handler();
+
+    SlaveHeartbeat_Handler();
+
+    SlaveUpload_Handler();
+
+    osDelay(1);
   }
-  /* USER CODE END LoRaRetryTaskCode */
+  /* USER CODE END StartLoRaTask */
 }
 
 /* LEDTimerCallback function */
@@ -266,57 +286,49 @@ void LEDTimerCallback(void *argument)
   /* USER CODE END LEDTimerCallback */
 }
 
-/* LoRaTimerCallback function */
-void LoRaTimerCallback(void *argument)
-{
-  /* USER CODE BEGIN LoRaTimerCallback */
-
-  UNUSED(argument);
-
-  if (LoRa.Mode != LoRaModeCommunication)
-  {
-    return;
-  }
-
-  if (LoRa.ReceiveMessage)
-  {
-    if (Message.Type == SlaveRegisterAck)
-    {
-      if (Controller.Connecting)
-      {
-        uint32_t UID = Uint8ArrayToUint32(Message.Data);
-
-        if (Controller.UID == UID)
-        {
-          Controller.ID = Message.Data[4];
-          Controller.Register = 1;
-          Controller.Connecting = 0;
-        }
-      }
-    } else if (Message.Type == SlaveLogout)
-    {
-      uint8_t DeviceID = Message.Data[0];
-
-      if (Controller.ID == DeviceID)
-      {
-        Controller.ID = 0;
-        Controller.Upload = 0;
-        Controller.Register = 0;
-      }
-    }
-
-    LoRa_CLearReceive(&LoRa);
-  }
-
-  SlaveHeartbeat_Handler();
-
-  SlaveUpload_Handler();
-
-  /* USER CODE END LoRaTimerCallback */
-}
-
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
+
+void SlaveRegisterRetry_Handler(void)
+{
+  if (Controller.Connecting && Controller.Register == 0 &&
+      osKernelGetTickCount() - Controller.LastRegisterRetryTick > 1000)
+  {
+    Controller.LastRegisterRetryTick = osKernelGetTickCount();
+
+    uint8_t Pack[8] = {
+        0xAA, SlaveRegister, 0x00, 0x04, Uint32ToUint8s(Controller.UID),
+    };
+    LoRa_SendPack(&LoRa, Pack, 8);
+  }
+}
+
+void SlaveRegisterAck_Handler(Message_t *Message)
+{
+  if (Controller.Connecting)
+  {
+    uint32_t UID = Uint8ArrayToUint32(Message->Data);
+
+    if (Controller.UID == UID)
+    {
+      Controller.ID = Message->Data[4];
+      Controller.Register = 1;
+      Controller.Connecting = 0;
+    }
+  }
+}
+
+void SlaveLogout_Handler(Message_t *Message)
+{
+  uint8_t DeviceID = Message->Data[0];
+
+  if (Controller.ID == DeviceID)
+  {
+    Controller.ID = 0;
+    Controller.Upload = 0;
+    Controller.Register = 0;
+  }
+}
 
 void SlaveHeartbeat_Handler(void)
 {

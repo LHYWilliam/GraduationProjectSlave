@@ -1,9 +1,5 @@
 #include "Application.h"
 
-extern osThreadId_t LoRaRetryTaskHandle;
-extern void LoRaRetryTaskCode(void *argument);
-extern const osThreadAttr_t LoRaRetryTask_attributes;
-
 void TextPage_BackCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar)
 {
   TextPage_ReturnUpperPage(TextPage);

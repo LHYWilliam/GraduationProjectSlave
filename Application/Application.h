@@ -52,7 +52,7 @@ typedef struct
   MessageType_t Type;
   uint8_t DeviceID;
   uint8_t Length;
-  uint8_t *Data;
+  uint8_t Data[64];
   uint32_t Tick;
 } Message_t;
 
@@ -65,6 +65,7 @@ typedef struct
 
   uint32_t UID;
   uint8_t Connecting;
+  uint32_t LastRegisterRetryTick;
   uint32_t LastHeartBeatTick;
   uint32_t LastUploadTick;
 } Controller_t;
@@ -89,7 +90,6 @@ extern uint8_t TextPageIndex;
 extern uint8_t TextPageCount;
 extern TextPage_t *TextPages[PageCount];
 
-extern Message_t Message;
 extern Controller_t Controller;
 
 void Application_Init(void);

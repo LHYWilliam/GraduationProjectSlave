@@ -6,14 +6,7 @@
 #include "LoRa.h"
 
 const char *LoRaBaudRateString[] = {
-    "1200",
-    "2400",
-    "4800",
-    "9600",
-    "19200",
-    "38400",
-    "57600",
-    "115200",
+    "1200", "2400", "4800", "9600", "19200", "38400", "57600", "115200",
 };
 
 const char *LoRaParityString[] = {
@@ -23,12 +16,7 @@ const char *LoRaParityString[] = {
 };
 
 const char *LoRaWLRateString[] = {
-    "0.3Kbps",
-    "1.2Kbps",
-    "2.4Kbps",
-    "4.8Kbps",
-    "9.6Kbps",
-    "19.2Kbps",
+    "0.3Kbps", "1.2Kbps", "2.4Kbps", "4.8Kbps", "9.6Kbps", "19.2Kbps",
 };
 
 const char *LoRaTPowerString[] = {
@@ -94,13 +82,6 @@ void LoRa_CommunicationMode(LoRa_t *Self)
   Self->Mode = LoRaModeCommunication;
 }
 
-void LoRa_CLearReceive(LoRa_t *Self)
-{
-  Self->ReceiveSize = 0;
-  Self->ReceiveOK = RESET;
-  Self->ReceiveMessage = RESET;
-}
-
 ErrorStatus LoRa_WaitForOK(LoRa_t *Self)
 {
   uint32_t Tick = osKernelGetTickCount();
@@ -109,7 +90,7 @@ ErrorStatus LoRa_WaitForOK(LoRa_t *Self)
   {
     if (osKernelGetTickCount() - Tick > 1000)
     {
-      LoRa_CLearReceive(Self);
+      Self->ReceiveOK = RESET;
 
       return ERROR;
     }
@@ -117,28 +98,28 @@ ErrorStatus LoRa_WaitForOK(LoRa_t *Self)
     osDelay(1);
   }
 
-  LoRa_CLearReceive(Self);
+  Self->ReceiveOK = RESET;
 
   return SUCCESS;
 }
 
-#define LoRa_SendATCommandWithArgs(Self, Command, ...) \
-  do                                                   \
-  {                                                    \
-    uint8_t RetryCount = 0;                            \
-    ErrorStatus Status = ERROR;                        \
-    while (Status == ERROR)                            \
-    {                                                  \
-      LoRa_Printf(Self, Command, __VA_ARGS__);         \
-      Status = LoRa_WaitForOK(Self);                   \
-      if (RetryCount >= 10)                            \
-      {                                                \
-        LoRa_CLearReceive(Self);                       \
-        Status = ERROR;                                \
-        break;                                         \
-      }                                                \
-      RetryCount++;                                    \
-    }                                                  \
+#define LoRa_SendATCommandWithArgs(Self, Command, ...)                                             \
+  do                                                                                               \
+  {                                                                                                \
+    uint8_t RetryCount = 0;                                                                        \
+    ErrorStatus Status = ERROR;                                                                    \
+    while (Status == ERROR)                                                                        \
+    {                                                                                              \
+      LoRa_Printf(Self, Command, __VA_ARGS__);                                                     \
+      Status = LoRa_WaitForOK(Self);                                                               \
+      if (RetryCount >= 10)                                                                        \
+      {                                                                                            \
+        Self->ReceiveOK = RESET;                                                                   \
+        Status = ERROR;                                                                            \
+        break;                                                                                     \
+      }                                                                                            \
+      RetryCount++;                                                                                \
+    }                                                                                              \
   } while (0)
 
 ErrorStatus LoRa_SendATCommand(LoRa_t *Self, const char *Command)
@@ -162,15 +143,9 @@ ErrorStatus LoRa_SendATCommand(LoRa_t *Self, const char *Command)
 }
 
 
-void LoRa_EnableEcho(LoRa_t *Self)
-{
-  LoRa_SendATCommand(Self, "ATE1\r\n");
-}
+void LoRa_EnableEcho(LoRa_t *Self) { LoRa_SendATCommand(Self, "ATE1\r\n"); }
 
-void LoRa_DisableEcho(LoRa_t *Self)
-{
-  LoRa_SendATCommand(Self, "ATE0\r\n");
-}
+void LoRa_DisableEcho(LoRa_t *Self) { LoRa_SendATCommand(Self, "ATE0\r\n"); }
 
 LoRa_BaudRate LoRa_ReadBaudRate(LoRa_t *Self)
 {
@@ -382,7 +357,8 @@ void LoRa_SetAddress(LoRa_t *Self, uint16_t Address)
 {
   Self->Config.Address = Address;
 
-  LoRa_SendATCommandWithArgs(Self, "AT+ADDR=%02X,%02X\r\n", (uint8_t) (Address >> 8 & 0xFF), (uint8_t) (Address & 0xFF));
+  LoRa_SendATCommandWithArgs(Self, "AT+ADDR=%02X,%02X\r\n", (uint8_t) (Address >> 8 & 0xFF),
+                             (uint8_t) (Address & 0xFF));
 }
 
 void LoRa_SetChannelWLRate(LoRa_t *Self, uint8_t Channel, LoRa_WLRate WLRate)
