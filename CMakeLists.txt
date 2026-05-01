@@ -65,6 +65,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/Util/Src/PID.c
     ${CMAKE_SOURCE_DIR}/Util/Src/Sampler.c
     ${CMAKE_SOURCE_DIR}/Util/Src/Serial.c
+    ${CMAKE_SOURCE_DIR}/Util/Src/CRC8.c
 )
 
 # Add include paths

@@ -14,16 +14,14 @@
 
 #include "LED.h"
 #include "Key.h"
-
 #include "OLED.h"
 #include "Menu.h"
 #include "Encoder.h"
-
 #include "Sampler.h"
 #include "MQSensor.h"
-
 #include "LoRa.h"
 #include "Serial.h"
+#include "CRC8.h"
 
 #define Uint8sToUint32(Data1, Data2, Data3, Data4)                                                 \
   (((uint32_t) (Data1) << 24) | ((uint32_t) (Data2) << 16) | ((uint32_t) (Data3) << 8) |           \
@@ -113,117 +111,118 @@ void TextPage_NextPageCallback(TextPage_t **TextPage, SelectioneBar_t *Selection
 void TextPage_UploadCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar);
 void TextPage_RegisterCallback(TextPage_t **TextPage, SelectioneBar_t *SelectioneBar);
 
-void TextPage_CursorCallback(TextPage_t *TextPage, SelectioneBar_t *SelectioneBar, RotationDirection Direction);
+void TextPage_CursorCallback(TextPage_t *TextPage, SelectioneBar_t *SelectioneBar,
+                             RotationDirection Direction);
 
-#define ShowTitleAndTexts(...)                                                          \
-  if (TextPage->TitleY + TextPage->TitleHeight >= 0 && TextPage->TitleY < OLED->Height) \
-  {                                                                                     \
-    OLED_Printf(OLED, TextPage->TitleX, TextPage->TitleY, TextPage->Title);             \
-  }                                                                                     \
-                                                                                        \
-  for (TextPage_t *Page = TextPage->HeadPage; Page != NULL; Page = Page->DownPage)      \
-  {                                                                                     \
-    if (Page->Y + Page->Height < 0)                                                     \
-    {                                                                                   \
-      continue;                                                                         \
-    }                                                                                   \
-    if (Page->Y >= OLED->Height)                                                        \
-    {                                                                                   \
-      break;                                                                            \
-    }                                                                                   \
-                                                                                        \
-    __VA_ARGS__                                                                         \
+#define ShowTitleAndTexts(...)                                                                     \
+  if (TextPage->TitleY + TextPage->TitleHeight >= 0 && TextPage->TitleY < OLED->Height)            \
+  {                                                                                                \
+    OLED_Printf(OLED, TextPage->TitleX, TextPage->TitleY, TextPage->Title);                        \
+  }                                                                                                \
+                                                                                                   \
+  for (TextPage_t *Page = TextPage->HeadPage; Page != NULL; Page = Page->DownPage)                 \
+  {                                                                                                \
+    if (Page->Y + Page->Height < 0)                                                                \
+    {                                                                                              \
+      continue;                                                                                    \
+    }                                                                                              \
+    if (Page->Y >= OLED->Height)                                                                   \
+    {                                                                                              \
+      break;                                                                                       \
+    }                                                                                              \
+                                                                                                   \
+    __VA_ARGS__                                                                                    \
   }
 
-#define TextPage_EmptyPage(title) \
-  {                               \
-      .Title = title,             \
+#define TextPage_EmptyPage(title)                                                                  \
+  {                                                                                                \
+      .Title = title,                                                                              \
   }
 
-#define TextPage_NextPage(title)                  \
-  {                                               \
-      .Title = title,                             \
-      .ClickCallback = TextPage_NextPageCallback, \
+#define TextPage_NextPage(title)                                                                   \
+  {                                                                                                \
+      .Title = title,                                                                              \
+      .ClickCallback = TextPage_NextPageCallback,                                                  \
   }
 
-#define TextPage_BackPage(title)                   \
-  {                                                \
-      .Title = title,                              \
-      .ClickCallback = TextPage_BackCallback,      \
-      .RotationCallback = TextPage_CursorCallback, \
+#define TextPage_BackPage(title)                                                                   \
+  {                                                                                                \
+      .Title = title,                                                                              \
+      .ClickCallback = TextPage_BackCallback,                                                      \
+      .RotationCallback = TextPage_CursorCallback,                                                 \
   }
 
-#define TextPage_NavigationPage(title)             \
-  {                                                \
-      .Title = title,                              \
-      .ShowCallback = TextPage_ShowCallback,       \
-      .UpdateCallback = TextPage_UpdateCallback,   \
-      .ClickCallback = TextPage_EnterCallback,     \
-      .RotationCallback = TextPage_CursorCallback, \
+#define TextPage_NavigationPage(title)                                                             \
+  {                                                                                                \
+      .Title = title,                                                                              \
+      .ShowCallback = TextPage_ShowCallback,                                                       \
+      .UpdateCallback = TextPage_UpdateCallback,                                                   \
+      .ClickCallback = TextPage_EnterCallback,                                                     \
+      .RotationCallback = TextPage_CursorCallback,                                                 \
   }
 
-#define TextPage_MQxPage(title)                    \
-  {                                                \
-      .Title = title,                              \
-      .ShowCallback = TextPage_ShowMQPageCallback, \
-      .ClickCallback = TextPage_EnterCallback,     \
-      .RotationCallback = TextPage_CursorCallback, \
+#define TextPage_MQxPage(title)                                                                    \
+  {                                                                                                \
+      .Title = title,                                                                              \
+      .ShowCallback = TextPage_ShowMQPageCallback,                                                 \
+      .ClickCallback = TextPage_EnterCallback,                                                     \
+      .RotationCallback = TextPage_CursorCallback,                                                 \
   }
 
-#define TextPage_ChartPage(title)     \
-  {                                   \
-      .Title = title,                 \
-      .TitleY = OLED.Height / 4,      \
-      .TitleWidth = OLED.Width,       \
-      .TitleHeight = OLED.Height / 2, \
+#define TextPage_ChartPage(title)                                                                  \
+  {                                                                                                \
+      .Title = title,                                                                              \
+      .TitleY = OLED.Height / 4,                                                                   \
+      .TitleWidth = OLED.Width,                                                                    \
+      .TitleHeight = OLED.Height / 2,                                                              \
   }
 
-#define TextPage_OptionGroupPage(title, Ptr)       \
-  {                                                \
-      .Title = title,                              \
-      .ShowCallback = TextPage_ShowCallback,       \
-      .UpdateCallback = TextPage_UpdateCallback,   \
-      .ClickCallback = TextPage_EnterCallback,     \
-      .RotationCallback = TextPage_CursorCallback, \
-      .IntParameterPtr = Ptr,                      \
+#define TextPage_OptionGroupPage(title, Ptr)                                                       \
+  {                                                                                                \
+      .Title = title,                                                                              \
+      .ShowCallback = TextPage_ShowCallback,                                                       \
+      .UpdateCallback = TextPage_UpdateCallback,                                                   \
+      .ClickCallback = TextPage_EnterCallback,                                                     \
+      .RotationCallback = TextPage_CursorCallback,                                                 \
+      .IntParameterPtr = Ptr,                                                                      \
   }
 
-#define TextPage_OptionPage(title)                    \
-  {                                                   \
-      .Title = title,                                 \
-      .ClickCallback = TextPage_ChooseOptionCallback, \
-      .RotationCallback = TextPage_CursorCallback,    \
+#define TextPage_OptionPage(title)                                                                 \
+  {                                                                                                \
+      .Title = title,                                                                              \
+      .ClickCallback = TextPage_ChooseOptionCallback,                                              \
+      .RotationCallback = TextPage_CursorCallback,                                                 \
   }
 
-#define TextPage_AddBackPage(Page)                       \
-  do                                                     \
-  {                                                      \
-    static TextPage_t BackPage = TextPage_BackPage("<"); \
-    TextPage_AddLowerPage(Page, &BackPage);              \
+#define TextPage_AddBackPage(Page)                                                                 \
+  do                                                                                               \
+  {                                                                                                \
+    static TextPage_t BackPage = TextPage_BackPage("<");                                           \
+    TextPage_AddLowerPage(Page, &BackPage);                                                        \
   } while (0)
 
-#define TextPage_AddOptionGroup(UpperPage, OptionGroup, Title, Ptr)     \
-  static TextPage_t OptionGroup = TextPage_OptionGroupPage(Title, Ptr); \
-  OptionGroup.ShowCallback = TextPage_ShowOptionPageCallback;           \
+#define TextPage_AddOptionGroup(UpperPage, OptionGroup, Title, Ptr)                                \
+  static TextPage_t OptionGroup = TextPage_OptionGroupPage(Title, Ptr);                            \
+  OptionGroup.ShowCallback = TextPage_ShowOptionPageCallback;                                      \
   TextPage_AddLowerPage(UpperPage, &OptionGroup);
 
 
-#define TextPage_AddOption(UpperPage, Option)                   \
-  do                                                            \
-  {                                                             \
-    static TextPage_t OptionPage = TextPage_OptionPage(Option); \
-    TextPage_AddLowerPage(UpperPage, &OptionPage);              \
+#define TextPage_AddOption(UpperPage, Option)                                                      \
+  do                                                                                               \
+  {                                                                                                \
+    static TextPage_t OptionPage = TextPage_OptionPage(Option);                                    \
+    TextPage_AddLowerPage(UpperPage, &OptionPage);                                                 \
   } while (0)
 
-#define TextPage_DialogPage(title)                     \
-  {                                                    \
-      .Title = title,                                  \
-      .TitleX = OLED.Width / 2,                        \
-      .TitleY = OLED.Height / 2,                       \
-      .ShowCallback = TextPage_ShowDialogCallback,     \
-      .UpdateCallback = TextPage_UpdateDialogCallback, \
-      .ClickCallback = TextPage_EnterCallback,         \
-      .RotationCallback = TextPage_CursorCallback,     \
+#define TextPage_DialogPage(title)                                                                 \
+  {                                                                                                \
+      .Title = title,                                                                              \
+      .TitleX = OLED.Width / 2,                                                                    \
+      .TitleY = OLED.Height / 2,                                                                   \
+      .ShowCallback = TextPage_ShowDialogCallback,                                                 \
+      .UpdateCallback = TextPage_UpdateDialogCallback,                                             \
+      .ClickCallback = TextPage_EnterCallback,                                                     \
+      .RotationCallback = TextPage_CursorCallback,                                                 \
   }
 
 #define ADCToVoltage(ADC) ((float) (ADC) * 3.3 / 4095.0)

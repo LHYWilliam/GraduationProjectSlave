@@ -217,24 +217,28 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
       }
     } else if (LoRa.Mode == LoRaModeCommunication)
     {
-      if (LoRa.RxBuffer[0] == 0xAA && LoRa.ReceiveSize >= 4 &&
-          LoRa.ReceiveSize == (4 + LoRa.RxBuffer[3]))
+      if (LoRa.RxBuffer[0] == 0xAA && LoRa.ReceiveSize >= 5 &&
+          LoRa.ReceiveSize == (5 + LoRa.RxBuffer[3]))
       {
-        Message_t Message;
-        Message.Head = LoRa.RxBuffer[0];
-        Message.Type = LoRa.RxBuffer[1];
-        Message.DeviceID = LoRa.RxBuffer[2];
-        Message.Length = LoRa.RxBuffer[3];
-        for (uint8_t i = 0; i < Message.Length; i++)
+        uint8_t CRC8 = CRC8_Calculate(LoRa.RxBuffer, LoRa.ReceiveSize - 1);
+        if (CRC8 == LoRa.RxBuffer[LoRa.ReceiveSize - 1])
         {
-          Message.Data[i] = LoRa.RxBuffer[4 + i];
+          Message_t Message;
+          Message.Head = LoRa.RxBuffer[0];
+          Message.Type = LoRa.RxBuffer[1];
+          Message.DeviceID = LoRa.RxBuffer[2];
+          Message.Length = LoRa.RxBuffer[3];
+          for (uint8_t i = 0; i < Message.Length; i++)
+          {
+            Message.Data[i] = LoRa.RxBuffer[4 + i];
+          }
+          Message.Tick = osKernelGetTickCount();
+          osMessageQueuePut(LoRaMessageQueueHandle, &Message, 0, 0);
         }
-        Message.Tick = osKernelGetTickCount();
-        osMessageQueuePut(LoRaMessageQueueHandle, &Message, 0, 0);
 
         LoRa.ReceiveSize = 0;
-      } else if (LoRa.RxBuffer[0] != 0xAA || (LoRa.RxBuffer[0] == 0xAA && LoRa.ReceiveSize >= 4 &&
-                                              LoRa.ReceiveSize > (4 + LoRa.RxBuffer[3])))
+      } else if (LoRa.RxBuffer[0] != 0xAA || (LoRa.RxBuffer[0] == 0xAA && LoRa.ReceiveSize >= 5 &&
+                                              LoRa.ReceiveSize > (5 + LoRa.RxBuffer[3])))
       {
         LoRa.ReceiveSize = 0;
       }

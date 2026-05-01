@@ -27,6 +27,7 @@
 /* USER CODE BEGIN Includes */
 
 #include "Application.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -296,10 +297,11 @@ void SlaveRegisterRetry_Handler(void)
   {
     Controller.LastRegisterRetryTick = osKernelGetTickCount();
 
-    uint8_t Pack[8] = {
+    uint8_t Pack[9] = {
         0xAA, SlaveRegister, 0x00, 0x04, Uint32ToUint8s(Controller.UID),
     };
-    LoRa_SendPack(&LoRa, Pack, 8);
+    Pack[8] = CRC8_Calculate(Pack, 8);
+    LoRa_SendPack(&LoRa, Pack, 9);
   }
 }
 
@@ -336,13 +338,14 @@ void SlaveHeartbeat_Handler(void)
   {
     Controller.LastHeartBeatTick = osKernelGetTickCount();
 
-    uint8_t Pack[4] = {
+    uint8_t Pack[5] = {
         0xAA,
         SlaveHeartbeat,
         Controller.ID,
         0x00,
     };
-    LoRa_SendPack(&LoRa, Pack, 4);
+    Pack[4] = CRC8_Calculate(Pack, 4);
+    LoRa_SendPack(&LoRa, Pack, 5);
   }
 }
 
@@ -355,7 +358,7 @@ void SlaveUpload_Handler(void)
 
     uint16_t Sensor1PPM = (uint16_t) MQSensor_CalculateMQ2PPM(MQSensor_GetData(&MQxSensor[0]));
     uint16_t Sensor2PPM = (uint16_t) MQSensor_CalculateMQ3PPM(MQSensor_GetData(&MQxSensor[1]));
-    uint8_t Pack[8] = {
+    uint8_t Pack[9] = {
         0xAA,
         SlaveUpload,
         Controller.ID,
@@ -363,7 +366,8 @@ void SlaveUpload_Handler(void)
         Uint16ToUint8s(Sensor1PPM),
         Uint16ToUint8s(Sensor2PPM),
     };
-    LoRa_SendPack(&LoRa, Pack, 8);
+    Pack[8] = CRC8_Calculate(Pack, 8);
+    LoRa_SendPack(&LoRa, Pack, 9);
   }
 }
 
