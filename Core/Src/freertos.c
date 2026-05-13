@@ -356,8 +356,8 @@ void SlaveUpload_Handler(void)
   {
     Controller.LastUploadTick = osKernelGetTickCount();
 
-    uint16_t Sensor1PPM = (uint16_t) MQSensor_CalculateMQ2PPM(MQSensor_GetData(&MQxSensor[0]));
-    uint16_t Sensor2PPM = (uint16_t) MQSensor_CalculateMQ3PPM(MQSensor_GetData(&MQxSensor[1]));
+    uint16_t Sensor1PPM = MQSensor_GetData(&MQxSensor[0]);
+    uint16_t Sensor2PPM = MQSensor_GetData(&MQxSensor[1]);
     uint8_t Pack[9] = {
         0xAA,
         SlaveUpload,

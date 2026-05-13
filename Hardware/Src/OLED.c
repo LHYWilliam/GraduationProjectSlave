@@ -51,15 +51,9 @@ void OLED_SetCursor(OLED_t *Self, uint8_t Page, uint8_t X)
   Self->OLED_WriteCommands(Self, Self->CommandsBuffer, 3);
 }
 
-void OLED_Fill(OLED_t *Self)
-{
-  memset(Self->DisplayBuffer, 0xFF, sizeof(Self->DisplayBuffer));
-}
+void OLED_Fill(OLED_t *Self) { memset(Self->DisplayBuffer, 0xFF, sizeof(Self->DisplayBuffer)); }
 
-void OLED_Clear(OLED_t *Self)
-{
-  memset(Self->DisplayBuffer, 0x00, sizeof(Self->DisplayBuffer));
-}
+void OLED_Clear(OLED_t *Self) { memset(Self->DisplayBuffer, 0x00, sizeof(Self->DisplayBuffer)); }
 
 void OLED_Reverse(OLED_t *Self)
 {
@@ -72,8 +66,7 @@ void OLED_Reverse(OLED_t *Self)
   }
 }
 
-void OLED_FillArea(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width,
-                   uint8_t Height)
+void OLED_FillArea(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height)
 {
   if (X >= Self->Width || Y >= Self->Height || X + Width < 0 || Y + Height < 0)
   {
@@ -98,8 +91,7 @@ void OLED_FillArea(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width,
 }
 
 
-void OLED_ClearArea(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width,
-                    uint8_t Height)
+void OLED_ClearArea(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height)
 {
   if (X >= Self->Width || Y >= Self->Height || X + Width < 0 || Y + Height < 0)
   {
@@ -123,8 +115,7 @@ void OLED_ClearArea(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width,
   }
 }
 
-void OLED_ReverseArea(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width,
-                      uint8_t Height)
+void OLED_ReverseArea(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height)
 {
   if (X >= Self->Width || Y >= Self->Height || X + Width < 0 || Y + Height < 0)
   {
@@ -234,7 +225,8 @@ void OLED_DrawLine(OLED_t *Self, int16_t X1, int16_t Y1, int16_t X2, int16_t Y2)
   }
 }
 
-void OLED_DrawHollowRectangle(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height, uint8_t Step)
+void OLED_DrawHollowRectangle(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height,
+                              uint8_t Step)
 {
   OLED_DrawHLine(Self, X, Y, Width, Step);
   OLED_DrawHLine(Self, X, Y + Height - 1, Width, Step);
@@ -247,16 +239,15 @@ void OLED_DrawSolidRectangle(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, 
   OLED_FillArea(Self, X, Y, Width, Height);
 }
 
-void OLED_DrawChart(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height, uint16_t *Data, uint16_t Length, int16_t Index)
+void OLED_DrawChart(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height,
+                    uint16_t *Data, uint16_t Length, int16_t Index)
 {
   for (uint8_t i = 0; i < Length - 1; i++, Index = (Index + 1) % Length)
   {
-    OLED_DrawLine(
-        Self,
-        Normalization(i, Length - 2, Width - 1, X),
-        Normalization(4095 - Data[Index], 4095, Height - 1, Y),
-        Normalization(i + 1, Length - 2, Width - 1, X),
-        Normalization(4095 - Data[(Index + 1) % Length], 4095, Height - 1, Y));
+    OLED_DrawLine(Self, Normalization(i, Length - 2, Width - 1, X),
+                  Normalization(1000 - Data[Index], 1000, Height - 1, Y),
+                  Normalization(i + 1, Length - 2, Width - 1, X),
+                  Normalization(1000 - Data[(Index + 1) % Length], 1000, Height - 1, Y));
   }
 
   OLED_DrawHollowRectangle(Self, X, Y, Width, Height, 3);
@@ -310,7 +301,8 @@ void OLED_DrawChart(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t H
 //   }
 // }
 
-void OLED_ShowImage(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height, const uint8_t *Image)
+void OLED_ShowImage(OLED_t *Self, int16_t X, int16_t Y, uint8_t Width, uint8_t Height,
+                    const uint8_t *Image)
 {
   // OLED_ClearArea(Self, X, Y, Width, Height);
 

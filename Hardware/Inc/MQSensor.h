@@ -24,9 +24,9 @@ typedef struct
 
 void MQSensor_Update(MQSensor_t *Self, uint16_t Data);
 uint16_t MQSensor_GetData(MQSensor_t *Self);
-float MQSensor_CalculateMQ2PPM(uint16_t ADCValue);
-float MQSensor_CalculateMQ3PPM(uint16_t ADCValue);
-float MQSensor_CalculateMQ4PPM(uint16_t ADCValue);
-float MQSensor_CalculateMQ5PPM(uint16_t ADCValue);
+uint16_t MQSensor_CalculateMQ2PPM(uint16_t ADCValue);
+uint16_t MQSensor_CalculateMQ3PPM(uint16_t ADCValue);
+uint16_t MQSensor_CalculateMQ4PPM(uint16_t ADCValue);
+uint16_t MQSensor_CalculateMQ5PPM(uint16_t ADCValue);
 
 #endif

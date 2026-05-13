@@ -23,6 +23,11 @@
 #include "Serial.h"
 #include "CRC8.h"
 
+#define Sensor1Label "MQ4"
+#define Sensor2Label "MQ5"
+#define Calculate_Sensor1PPM MQSensor_CalculateMQ4PPM
+#define Calculate_Sensor2PPM MQSensor_CalculateMQ5PPM
+
 #define Uint8sToUint32(Data1, Data2, Data3, Data4)                                                 \
   (((uint32_t) (Data1) << 24) | ((uint32_t) (Data2) << 16) | ((uint32_t) (Data3) << 8) |           \
    ((uint32_t) (Data4) << 0))

@@ -49,24 +49,25 @@ float calculateVRL(uint16_t adcValue, float vref, uint16_t resolution)
  * 
  * 注意：内置的 R0 值为 6.00，单位为 kΩ，这是一个常见的经验值。
  */
-float MQSensor_CalculateMQ2PPM(uint16_t adcValue)
+uint16_t MQSensor_CalculateMQ2PPM(uint16_t ADCValue)
 {
   // 工程经验参数 (针对液化石油气 LPG)
-  const float RL = 5.0f;   // 负载电阻，常见为5kΩ
-  const float R0 = 6.00f;  // 洁净空气中的传感器电阻 (kΩ)，这是一个经验值
+  const float RL = 10.0f;  // 负载电阻，常见为5kΩ
+  const float R0 = 9.83f;  // 洁净空气中的传感器电阻 (kΩ)，这是一个经验值
   const float Vc = 5.0f;   // 模块供电电压
   const float a = 574.25f; // 回归系数 a
   const float b = -2.222f; // 回归系数 b
 
-  float VRL = calculateVRL(adcValue, 3.3f, 4096.0f);
+  float VRL = calculateVRL(ADCValue, 3.3f, 4096.0f);
 
   // 计算传感器电阻 RS，单位与 RL 保持一致 (kΩ)
   float RS = (Vc - VRL) / VRL * RL;
 
   // 计算浓度 PPM
-  float ppm = a * pow(RS / R0, b);
+  float PPM = a * pow(RS / R0, b);
+  PPM = PPM / 2410. * 1000;
 
-  return ppm;
+  return PPM;
 }
 
 // ========== 2. MQ-3 传感器 (检测酒精) ==========
@@ -77,20 +78,22 @@ float MQSensor_CalculateMQ2PPM(uint16_t adcValue)
  * 
  * 注意：内置的 R0 值为 10.00，单位为 kΩ，这是一个常见的经验值。
  */
-float MQSensor_CalculateMQ3PPM(uint16_t adcValue)
+uint16_t MQSensor_CalculateMQ3PPM(uint16_t ADCValue)
 {
   // 工程经验参数 (酒精)
-    const float RL = 1.0f;          // 负载电阻 1kΩ
-    const float R0 = 10.00f;        // 洁净空气电阻 (kΩ)，经验值
-    const float Vc = 5.0f;          // 供电电压 5V
-    const float a = 4.8387f;        // 原系数 a
-    const float b = -2.68f;         // 原系数 b
+  const float RL = 10.0f;  // 负载电阻 1kΩ
+  const float R0 = 60.00f; // 洁净空气电阻 (kΩ)，经验值
+  const float Vc = 5.0f;   // 供电电压 5V
+  const float a = 4.8387f; // 原系数 a
+  const float b = -2.68f;  // 原系数 b
 
-    float VRL = 3.3f * adcValue / 4096.0f;
-    float RS = (Vc - VRL) / VRL * RL;
-    float ppm = a * pow(RS / R0, b);
+  float VRL = 3.3f * ADCValue / 4096.0f;
+  float RS = (Vc - VRL) / VRL * RL;
 
-    return ppm;
+  float PPM = a * pow(RS / R0, b);
+  PPM = PPM / 3479. * 1000;
+
+  return PPM;
 }
 
 // ========== 3. MQ-4 传感器 (检测甲烷 CH4) ==========
@@ -101,20 +104,22 @@ float MQSensor_CalculateMQ3PPM(uint16_t adcValue)
  * 
  * 注意：内置的 R0 值为 12.00，单位为 kΩ，这是一个常见的经验值。
  */
-float MQSensor_CalculateMQ4PPM(uint16_t adcValue)
+uint16_t MQSensor_CalculateMQ4PPM(uint16_t ADCValue)
 {
   // 工程经验参数 (针对甲烷)
-  const float RL = 5.0f;   // 负载电阻，常见为5kΩ
-  const float R0 = 12.00f; // 洁净空气中的传感器电阻 (kΩ)，经验值
+  const float RL = 10.0f;  // 负载电阻，常见为5kΩ
+  const float R0 = 4.4f;   // 洁净空气中的传感器电阻 (kΩ)，经验值
   const float Vc = 5.0f;   // 模块供电电压
   const float a = 1012.7f; // 回归系数 a
   const float b = -2.786f; // 回归系数 b
 
-  float VRL = calculateVRL(adcValue, 3.3f, 4096.0f);
+  float VRL = calculateVRL(ADCValue, 3.3f, 4096.0f);
   float RS = (Vc - VRL) / VRL * RL;
-  float ppm = a * pow(RS / R0, b);
 
-  return ppm;
+  float PPM = a * pow(RS / R0, b);
+  PPM = PPM / 652. * 1000;
+
+  return PPM;
 }
 
 // ========== 4. MQ-5 传感器 (检测液化石油气 LPG) ==========
@@ -125,18 +130,20 @@ float MQSensor_CalculateMQ4PPM(uint16_t adcValue)
  * 
  * 注意：内置的 R0 值为 8.00，单位为 kΩ，这是一个常见的经验值。
  */
-float MQSensor_CalculateMQ5PPM(uint16_t adcValue)
+uint16_t MQSensor_CalculateMQ5PPM(uint16_t ADCValue)
 {
   // 工程经验参数 (针对液化石油气 LPG)
-  const float RL = 5.0f;   // 负载电阻，常见为5kΩ
-  const float R0 = 8.00f;  // 洁净空气中的传感器电阻 (kΩ)，经验值
+  const float RL = 10.0f;  // 负载电阻，常见为5kΩ
+  const float R0 = 6.5f;   // 洁净空气中的传感器电阻 (kΩ)，经验值
   const float Vc = 5.0f;   // 模块供电电压
   const float a = 80.897f; // 回归系数 a
   const float b = -2.431f; // 回归系数 b
 
-  float VRL = calculateVRL(adcValue, 3.3f, 4096.0f);
+  float VRL = calculateVRL(ADCValue, 3.3f, 4096.0f);
   float RS = (Vc - VRL) / VRL * RL;
-  float ppm = a * pow(RS / R0, b);
 
-  return ppm;
+  float PPM = a * pow(RS / R0, b);
+  PPM = PPM / 143. * 1000;
+
+  return PPM;
 }

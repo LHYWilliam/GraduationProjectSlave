@@ -109,7 +109,7 @@ int main(void)
   /* USER CODE END 2 */
 
   /* Init scheduler */
-  osKernelInitialize();  /* Call init function for freertos objects (in cmsis_os2.c) */
+  osKernelInitialize(); /* Call init function for freertos objects (in cmsis_os2.c) */
   MX_FREERTOS_Init();
 
   /* Start scheduler */
@@ -155,8 +155,8 @@ void SystemClock_Config(void)
 
   /** Initializes the CPU, AHB and APB buses clocks
   */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.ClockType =
+      RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
@@ -192,10 +192,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
   if (htim->Instance == TIM3)
   {
-    for (uint8_t i = 0; i < sizeof(MQxSensor) / sizeof(MQxSensor[0]); i++)
-    {
-      MQSensor_Update(&MQxSensor[i], Sampler.Buffer[i]);
-    }
+    MQSensor_Update(&MQxSensor[0], Calculate_Sensor1PPM(Sampler.Buffer[0]));
+    MQSensor_Update(&MQxSensor[1], Calculate_Sensor2PPM(Sampler.Buffer[1]));
   }
 
   /* USER CODE END Callback 0 */

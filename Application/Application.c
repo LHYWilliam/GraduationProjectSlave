@@ -45,7 +45,7 @@ uint16_t MQ2Data[MQ2DataLength];
 #define MQ3DataLength 128
 uint16_t MQ3Data[MQ3DataLength];
 
-#define Threshold Threshold = VoltageToADC(2.048), .Relaxation = VoltageToADC(0.128)
+#define Threshold Threshold = 128, .Relaxation = 16
 
 MQSensor_t MQxSensor[2] = {
     {
@@ -127,33 +127,33 @@ void Application_Init(void)
     static TextPage_t BackPage = TextPage_NextPage(">");
     TextPage_AddLowerPage(&MQxSensorPage, &BackPage);
 
-    static TextPage_t MQ2TextPage = TextPage_MQxPage("MQ2");
-    TextPage_AddLowerPage(&MQxSensorPage, &MQ2TextPage);
+    static TextPage_t Sensor1TextPage = TextPage_MQxPage(Sensor1Label);
+    TextPage_AddLowerPage(&MQxSensorPage, &Sensor1TextPage);
 
-    static TextPage_t MQ3TextPage = TextPage_MQxPage("MQ3");
-    TextPage_AddLowerPage(&MQxSensorPage, &MQ3TextPage);
+    static TextPage_t Sensor2TextPage = TextPage_MQxPage(Sensor2Label);
+    TextPage_AddLowerPage(&MQxSensorPage, &Sensor2TextPage);
   }
 
-  static TextPage_t MQ2Page = TextPage_MQxPage("MQ2");
-  MQ2Page.Index = 1;
+  static TextPage_t Sensor1Page = TextPage_MQxPage(Sensor1Label);
+  Sensor1Page.Index = 1;
   {
     static TextPage_t BackPage = TextPage_NextPage(">");
-    TextPage_AddLowerPage(&MQ2Page, &BackPage);
+    TextPage_AddLowerPage(&Sensor1Page, &BackPage);
 
-    static TextPage_t MQ2ChartPage;
-    MQ2ChartPage = (TextPage_t) TextPage_ChartPage("MQ2");
-    TextPage_AddLowerPage(&MQ2Page, &MQ2ChartPage);
+    static TextPage_t Sensor1ChartPage;
+    Sensor1ChartPage = (TextPage_t) TextPage_ChartPage(Sensor1Label);
+    TextPage_AddLowerPage(&Sensor1Page, &Sensor1ChartPage);
   }
 
-  static TextPage_t MQ3Page = TextPage_MQxPage("MQ3");
-  MQ3Page.Index = 2;
+  static TextPage_t Sensor2Page = TextPage_MQxPage(Sensor2Label);
+  Sensor2Page.Index = 2;
   {
     static TextPage_t BackPage = TextPage_NextPage(">");
-    TextPage_AddLowerPage(&MQ3Page, &BackPage);
+    TextPage_AddLowerPage(&Sensor2Page, &BackPage);
 
-    static TextPage_t MQ3ChartPage;
-    MQ3ChartPage = (TextPage_t) TextPage_ChartPage("MQ3");
-    TextPage_AddLowerPage(&MQ3Page, &MQ3ChartPage);
+    static TextPage_t Sensor2ChartPage;
+    Sensor2ChartPage = (TextPage_t) TextPage_ChartPage(Sensor2Label);
+    TextPage_AddLowerPage(&Sensor2Page, &Sensor2ChartPage);
   }
 
   static TextPage_t LoRaPage = TextPage_NavigationPage("LoRa");
@@ -182,8 +182,8 @@ void Application_Init(void)
   }
 
   TextPages[0] = &MQxSensorPage;
-  TextPages[1] = &MQ2Page;
-  TextPages[2] = &MQ3Page;
+  TextPages[1] = &Sensor1Page;
+  TextPages[2] = &Sensor2Page;
   TextPages[3] = &LoRaPage;
   TextPage = TextPages[0];
 
